@@ -10,7 +10,7 @@ const startServer = async () => {
 
     // Start listening
     const server = app.listen(PORT, () => {
-      console.log(`[Server] SentinelCloud Backend is listening on port ${PORT}`);
+      console.log(`[Server] CloudLockr Backend is listening on port ${PORT}`);
       console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 

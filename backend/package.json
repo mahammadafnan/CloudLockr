@@ -1,5 +1,5 @@
 {
-  "name": "sentinelcloud-backend",
+  "name": "cloudlockr-backend",
   "version": "1.0.0",
   "description": "AI-Powered CSPM backend service",
   "main": "src/server.js",

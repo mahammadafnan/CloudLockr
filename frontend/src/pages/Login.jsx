@@ -44,7 +44,7 @@ const Login = () => {
             <HiShieldCheck size={32} />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-white">Welcome back</h2>
-          <p className="text-sm text-gray-400 mt-1">Sign in to your SentinelCloud dashboard</p>
+          <p className="text-sm text-gray-400 mt-1">Sign in to your CloudLockr dashboard</p>
         </div>
 
         {/* Login Form */}

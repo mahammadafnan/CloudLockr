@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  const connUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sentinelcloud';
+  const connUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cloudlockr';
   let retries = 5;
 
   while (retries) {

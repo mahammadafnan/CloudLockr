@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize Auth state from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('sentinel_user');
+    const storedUser = localStorage.getItem('cloudlockr_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
       // Simulate API call delay
       await new Promise((res) => setTimeout(res, 800));
 
-      const registeredUsers = JSON.parse(localStorage.getItem('sentinel_registered_users') || '[]');
+      const registeredUsers = JSON.parse(localStorage.getItem('cloudlockr_registered_users') || '[]');
       
       // Check if user already exists
       if (registeredUsers.some((u) => u.email === email)) {
@@ -31,11 +31,11 @@ export const AuthProvider = ({ children }) => {
 
       const newUser = { id: Date.now().toString(), name, email, role, password };
       registeredUsers.push(newUser);
-      localStorage.setItem('sentinel_registered_users', JSON.stringify(registeredUsers));
+      localStorage.setItem('cloudlockr_registered_users', JSON.stringify(registeredUsers));
 
       // Auto log in after register
       const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
-      localStorage.setItem('sentinel_user', JSON.stringify(sessionUser));
+      localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
       setUser(sessionUser);
       
       return { success: true, user: sessionUser };
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       // Simulate API call delay
       await new Promise((res) => setTimeout(res, 800));
 
-      const registeredUsers = JSON.parse(localStorage.getItem('sentinel_registered_users') || '[]');
+      const registeredUsers = JSON.parse(localStorage.getItem('cloudlockr_registered_users') || '[]');
       const foundUser = registeredUsers.find((u) => u.email === email && u.password === password);
 
       if (!foundUser) {
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const sessionUser = { id: foundUser.id, name: foundUser.name, email: foundUser.email, role: foundUser.role };
-      localStorage.setItem('sentinel_user', JSON.stringify(sessionUser));
+      localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
       setUser(sessionUser);
 
       return { success: true, user: sessionUser };
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout
   const logout = () => {
-    localStorage.removeItem('sentinel_user');
+    localStorage.removeItem('cloudlockr_user');
     setUser(null);
   };
 

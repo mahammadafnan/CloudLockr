@@ -53,7 +53,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {isOpen && (
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-wider text-white">
-                Sentinel<span className="text-blue-500">Cloud</span>
+                Cloud<span className="text-blue-500">Lockr</span>
               </span>
               <span className="text-[8px] text-gray-500 font-mono tracking-widest uppercase">CSPM</span>
             </div>

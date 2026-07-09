@@ -1,6 +1,6 @@
-# SentinelCloud
+# CloudLockr
 
-SentinelCloud is an AI-powered Cloud Security Posture Management (CSPM) application designed to detect, assess, and recommend fixes for security vulnerabilities and misconfigurations in AWS cloud environments. It provides real-time security scanning, scoring, automated report generation (PDF), security alerts, compliance benchmarking, and conversational AI security assistance.
+CloudLockr is an AI-powered Cloud Security Posture Management (CSPM) application designed to detect, assess, and recommend fixes for security vulnerabilities and misconfigurations in AWS cloud environments. It provides real-time security scanning, scoring, automated report generation (PDF), security alerts, compliance benchmarking, and conversational AI security assistance.
 
 ## Technology Stack
 - **Frontend**: React (Vite), Tailwind CSS, React Router DOM, Axios, Chart.js, React-Chartjs-2
