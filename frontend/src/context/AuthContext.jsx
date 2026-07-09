@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
       const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
       localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
       setUser(sessionUser);
+      setLoading(false);
       
       return { success: true, user: sessionUser };
     } catch (error) {
@@ -62,6 +63,7 @@ export const AuthProvider = ({ children }) => {
       const sessionUser = { id: foundUser.id, name: foundUser.name, email: foundUser.email, role: foundUser.role };
       localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
       setUser(sessionUser);
+      setLoading(false);
 
       return { success: true, user: sessionUser };
     } catch (error) {

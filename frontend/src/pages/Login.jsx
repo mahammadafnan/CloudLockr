@@ -62,7 +62,7 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="analyst@sentinelcloud.com"
+                placeholder="analyst@CloudLockr.com"
                 className="w-full bg-[#0c1325] border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors font-mono"
               />
             </div>
