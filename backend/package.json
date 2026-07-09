@@ -1,0 +1,31 @@
+{
+  "name": "sentinelcloud-backend",
+  "version": "1.0.0",
+  "description": "AI-Powered CSPM backend service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudtrail": "^3.500.0",
+    "@aws-sdk/client-ec2": "^3.500.0",
+    "@aws-sdk/client-iam": "^3.500.0",
+    "@aws-sdk/client-rds": "^3.500.0",
+    "@aws-sdk/client-s3": "^3.500.0",
+    "@google/generative-ai": "^0.1.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.1.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.9",
+    "pdfkit": "^0.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "private": true
+}
