@@ -38,3 +38,6 @@ pnpm-debug.log*
 *.key
 credentials.json
 aws-keys.csv
+
+# Project Documentation
+docs/
