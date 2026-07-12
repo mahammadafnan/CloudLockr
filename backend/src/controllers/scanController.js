@@ -3,6 +3,7 @@ const awsConfig = require('../config/aws');
 const Scan = require('../models/Scan');
 const Resource = require('../models/Resource');
 const Finding = require('../models/Finding');
+const { evaluateRules } = require('../rules/index');
 
 // Import individual AWS SDK scanners
 const { scanS3 } = require('../scanners/s3Scanner');
@@ -11,120 +12,7 @@ const { scanIAM } = require('../scanners/iamScanner');
 const { scanSecurityGroups } = require('../scanners/securityGroupScanner');
 const { scanCloudTrail } = require('../scanners/cloudTrailScanner');
 
-/**
- * Basic Rule Evaluation Engine to create findings dynamically from resource configurations
- * @param {Array} resources List of Mongoose Resource documents scanned
- * @returns {Promise<Object>} Object containing counts of findings found
- */
-const runRuleEvaluations = async (resources) => {
-  console.log('[Rules Evaluator] Auditing ingested resources configurations...');
-  
-  // Wipe previous findings to prevent duplicate tracking logs
-  const resourceIds = resources.map((r) => r._id);
-  await Finding.deleteMany({ resourceId: { $in: resourceIds } });
-
-  const counts = { critical: 0, high: 0, medium: 0, low: 0, informational: 0 };
-
-  for (const res of resources) {
-    // Rule 1: S3 Public Access Block
-    if (res.service === 'S3' && res.status === 'public') {
-      await Finding.create({
-        title: 'S3 Public Bucket Access Detected',
-        description: `The S3 bucket '${res.name}' allows public read/write configurations.`,
-        severity: 'Critical',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Configure Block Public Access settings on the bucket to prevent unauthorized data exposure.',
-        complianceMapping: { cisAWS: '2.1.1', awsBestPractices: 'S3-002', nist: 'PR.AC-4' },
-        docLink: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html',
-        status: 'Active',
-      });
-      counts.critical++;
-    }
-
-    // Rule 2: Unencrypted S3 Bucket
-    if (res.service === 'S3' && res.tags.get('Encryption') === 'disabled') {
-      await Finding.create({
-        title: 'S3 Bucket Encryption Disabled',
-        description: `The S3 bucket '${res.name}' does not have default server-side encryption enabled.`,
-        severity: 'High',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Enable default SSE-S3 or SSE-KMS encryption in the bucket configuration properties.',
-        complianceMapping: { cisAWS: '2.1.2', awsBestPractices: 'S3-004', nist: 'PR.DS-1' },
-        docLink: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-encryption.html',
-        status: 'Active',
-      });
-      counts.high++;
-    }
-
-    // Rule 3: Security Group SSH Port 22 exposed to Internet
-    if (res.service === 'Security Groups' && res.tags.get('OpenSSH') === 'true') {
-      await Finding.create({
-        title: 'Security Group SSH Port 22 Open to Public',
-        description: `Security Group '${res.name}' allows inbound SSH traffic from any IP scope (0.0.0.0/0).`,
-        severity: 'Critical',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Modify the security group ingress rule list to allow SSH connections only from authorized CIDRs.',
-        complianceMapping: { cisAWS: '4.1', awsBestPractices: 'EC2-008', nist: 'PR.PT-4' },
-        docLink: 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/authorizing-access-to-an-instance.html',
-        status: 'Active',
-      });
-      counts.critical++;
-    }
-
-    // Rule 4: Unencrypted EBS Volume
-    if (res.service === 'EBS' && res.tags.get('Encrypted') === 'disabled') {
-      await Finding.create({
-        title: 'EBS Volume Encryption Disabled',
-        description: `The virtual storage volume '${res.name}' is unencrypted.`,
-        severity: 'High',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Configure encryption parameters when launching volumes, or copy the volume to an encrypted snapshot.',
-        complianceMapping: { cisAWS: '2.2.1', awsBestPractices: 'EC2-003', nist: 'PR.DS-1' },
-        docLink: 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html',
-        status: 'Active',
-      });
-      counts.high++;
-    }
-
-    // Rule 5: IAM User console access without MFA
-    if (res.service === 'IAM' && res.tags.get('ConsoleAccess') === 'enabled' && res.tags.get('MfaActive') === 'disabled') {
-      await Finding.create({
-        title: 'IAM Console User Missing MFA',
-        description: `IAM User '${res.name}' has console login profiles active without MFA tokens enabled.`,
-        severity: 'Medium',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Configure Virtual MFA device configurations on security user credentials to enable multi-step login protection.',
-        complianceMapping: { cisAWS: '1.2', awsBestPractices: 'IAM-002', nist: 'PR.AC-6' },
-        docLink: 'https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html',
-        status: 'Active',
-      });
-      counts.medium++;
-    }
-
-    // Rule 6: CloudTrail logging disabled
-    if (res.service === 'CloudTrail' && res.status === 'disabled') {
-      await Finding.create({
-        title: 'CloudTrail Logging is Disabled',
-        description: `Audit logging configuration '${res.name}' is currently in a disabled state.`,
-        severity: 'High',
-        resourceId: res._id,
-        resourceArn: res.arn,
-        recommendation: 'Enable logging parameters on the specified audit trail to track environment API operations.',
-        complianceMapping: { cisAWS: '1.1', awsBestPractices: 'CT-001', nist: 'DE.AE-3' },
-        docLink: 'https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html',
-        status: 'Active',
-      });
-      counts.high++;
-    }
-  }
-
-  return counts;
-};
+// runRuleEvaluations has been refactored into the rules modular engine registry
 
 /**
  * Seed fallback database structures if AWS keys are not configured
@@ -206,7 +94,7 @@ const runMockScanIngestion = async (accountId) => {
   });
 
   const resources = [s3, ec2, sg, iam, ct];
-  const findingsCount = await runRuleEvaluations(resources);
+  const findingsCount = await evaluateRules(resources);
 
   return {
     scannedCount: resources.length,
@@ -316,7 +204,7 @@ exports.triggerScan = async (req, res, next) => {
     }
 
     // Run rules engine against newly saved live resources
-    const findingsCount = await runRuleEvaluations(allResources);
+    const findingsCount = await evaluateRules(allResources);
     
     const totalFindings =
       findingsCount.critical +
