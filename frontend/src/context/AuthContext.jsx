@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext(null);
 
@@ -6,75 +7,94 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize Auth state from localStorage
+  // Initialize Auth state from localStorage and verify JWT validity with backend
   useEffect(() => {
-    const storedUser = localStorage.getItem('cloudlockr_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const verifyToken = async () => {
+      const storedUser = localStorage.getItem('cloudlockr_user');
+      const storedToken = localStorage.getItem('cloudlockr_token');
+
+      if (storedUser && storedToken) {
+        try {
+          // Set authorization header globally for all axios requests
+          axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          
+          // Verify JWT with backend profile endpoint
+          const res = await axios.get('/api/auth/me');
+          if (res.data.success) {
+            setUser(res.data.user);
+          } else {
+            logout();
+          }
+        } catch (error) {
+          console.error('[Auth Context] Token verification failed:', error.message);
+          logout();
+        }
+      }
+      setLoading(false);
+    };
+
+    verifyToken();
   }, []);
 
-  // Mock registration
+  // Real Backend Registration API Call
   const register = async (name, email, password, role) => {
     setLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((res) => setTimeout(res, 800));
-
-      const registeredUsers = JSON.parse(localStorage.getItem('cloudlockr_registered_users') || '[]');
+      const res = await axios.post('/api/auth/register', { name, email, password, role });
       
-      // Check if user already exists
-      if (registeredUsers.some((u) => u.email === email)) {
-        throw new Error('User already registered with this email address.');
-      }
-
-      const newUser = { id: Date.now().toString(), name, email, role, password };
-      registeredUsers.push(newUser);
-      localStorage.setItem('cloudlockr_registered_users', JSON.stringify(registeredUsers));
-
-      // Auto log in after register
-      const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
+      const { token, user: sessionUser } = res.data;
+      
+      // Save session credentials in localStorage
+      localStorage.setItem('cloudlockr_token', token);
       localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
+      
+      // Apply token header globally
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       setUser(sessionUser);
       setLoading(false);
-      
       return { success: true, user: sessionUser };
     } catch (error) {
       setLoading(false);
-      throw error;
+      const message = error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+      throw new Error(message);
     }
   };
 
-  // Mock login
+  // Real Backend Login API Call
   const login = async (email, password) => {
     setLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((res) => setTimeout(res, 800));
-
-      const registeredUsers = JSON.parse(localStorage.getItem('cloudlockr_registered_users') || '[]');
-      const foundUser = registeredUsers.find((u) => u.email === email && u.password === password);
-
-      if (!foundUser) {
-        throw new Error('Invalid email or password credentials.');
-      }
-
-      const sessionUser = { id: foundUser.id, name: foundUser.name, email: foundUser.email, role: foundUser.role };
+      const res = await axios.post('/api/auth/login', { email, password });
+      
+      const { token, user: sessionUser } = res.data;
+      
+      // Save session credentials in localStorage
+      localStorage.setItem('cloudlockr_token', token);
       localStorage.setItem('cloudlockr_user', JSON.stringify(sessionUser));
+      
+      // Apply token header globally
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       setUser(sessionUser);
       setLoading(false);
-
       return { success: true, user: sessionUser };
     } catch (error) {
       setLoading(false);
-      throw error;
+      const message = error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+      throw new Error(message);
     }
   };
 
-  // Logout
+  // Logout Session cleaner
   const logout = () => {
     localStorage.removeItem('cloudlockr_user');
+    localStorage.removeItem('cloudlockr_token');
+    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
