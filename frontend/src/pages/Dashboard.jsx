@@ -10,7 +10,9 @@ import {
   HiOutlineRefresh,
   HiOutlineTrendingUp,
   HiOutlineClock,
-  HiOutlineDownload
+  HiOutlineDownload,
+  HiOutlineSparkles,
+  HiX
 } from 'react-icons/hi';
 
 const Dashboard = () => {
@@ -18,32 +20,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [downloading, setDownloading] = useState(false);
-
-  // Trigger PDF Report Generation & Download Stream
-  const downloadReport = async () => {
-    setDownloading(true);
-    toast.promise(
-      axios.get('/api/reports/download', { responseType: 'blob' }),
-      {
-        loading: 'Compiling security audit findings and generating PDF report...',
-        success: (res) => {
-          setDownloading(false);
-          const url = window.URL.createObjectURL(new Blob([res.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', 'CloudLockr_Security_Report.pdf');
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          return 'PDF report downloaded successfully!';
-        },
-        error: (err) => {
-          setDownloading(false);
-          return 'Failed to download report.';
-        }
-      }
-    ).catch(() => setDownloading(false));
-  };
   const [stats, setStats] = useState({
     securityScore: 100,
     totalResources: 0,
@@ -53,6 +29,11 @@ const Dashboard = () => {
     findingsCount: { critical: 0, high: 0, medium: 0, low: 0, total: 0 }
   });
   const [findings, setFindings] = useState([]);
+
+  // AI Assistant drawer panel states
+  const [selectedFinding, setSelectedFinding] = useState(null);
+  const [loadingAi, setLoadingAi] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
 
   // Fetch Dashboard Stats and active findings from API
   const fetchDashboardData = async () => {
@@ -103,6 +84,112 @@ const Dashboard = () => {
      .catch(() => setScanning(false));
   };
 
+  // Trigger PDF Report Generation & Download Stream
+  const downloadReport = async () => {
+    setDownloading(true);
+    toast.promise(
+      axios.get('/api/reports/download', { responseType: 'blob' }),
+      {
+        loading: 'Compiling security audit findings and generating PDF report...',
+        success: (res) => {
+          setDownloading(false);
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'CloudLockr_Security_Report.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          return 'PDF report downloaded successfully!';
+        },
+        error: (err) => {
+          setDownloading(false);
+          return 'Failed to download report.';
+        }
+      }
+    ).catch(() => setDownloading(false));
+  };
+
+  // Trigger AI Assistant Explanation query
+  const handleFindingSelect = async (finding) => {
+    setSelectedFinding(finding);
+    setLoadingAi(true);
+    setAiResponse('');
+    
+    try {
+      const res = await axios.get(`/api/ai/explain/${finding._id}`);
+      if (res.data.success) {
+        setAiResponse(res.data.analysis);
+      }
+    } catch (error) {
+      console.error('[AI Assistant API] Error fetching analysis:', error.message);
+      toast.error('Failed to connect to AI Security Assistant.');
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
+  // Custom parser to format and copy AI code blocks cleanly
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+
+    // Split text by markdown code fences
+    const segments = text.split(/(```[\s\S]*?```)/g);
+
+    return segments.map((seg, idx) => {
+      if (seg.startsWith('```')) {
+        // Strip code block wrappers and clean syntax flags
+        const code = seg
+          .replace(/```[a-zA-Z]*/, '')
+          .replace(/```$/, '')
+          .trim();
+
+        return (
+          <div key={idx} className="my-4 bg-black border border-gray-800 rounded-lg overflow-hidden font-mono text-xs shadow-inner">
+            <div className="flex items-center justify-between px-4 py-1.5 bg-gray-950 border-b border-gray-800 text-[10px] uppercase text-gray-500 font-sans tracking-wider">
+              <span>Remediation CLI Code</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(code);
+                  toast.success('AWS CLI command copied to clipboard!');
+                }}
+                className="text-blue-400 hover:text-blue-300 font-semibold lowercase active:scale-95 transition-all"
+              >
+                copy
+              </button>
+            </div>
+            <pre className="p-4 overflow-x-auto text-emerald-400 select-all leading-relaxed whitespace-pre-wrap">{code}</pre>
+          </div>
+        );
+      }
+
+      // Format bullet lists and section headers
+      return seg.split('\n').map((line, lIdx) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('###')) {
+          return (
+            <h4 key={`${idx}-${lIdx}`} className="text-xs font-bold text-blue-400 mt-6 mb-2 tracking-wider uppercase border-b border-gray-800 pb-1 flex items-center space-x-1.5">
+              <span>{trimmed.replace(/^###\s*/, '')}</span>
+            </h4>
+          );
+        }
+        if (trimmed.startsWith('-')) {
+          return (
+            <div key={`${idx}-${lIdx}`} className="flex items-start space-x-2 my-2.5 text-xs text-gray-300 leading-relaxed pl-1">
+              <span className="text-blue-500 font-extrabold mt-0.5">•</span>
+              <span>{trimmed.replace(/^-\s*/, '')}</span>
+            </div>
+          );
+        }
+        return trimmed ? (
+          <p key={`${idx}-${lIdx}`} className="text-xs text-gray-300 my-2 leading-relaxed">
+            {trimmed}
+          </p>
+        ) : null;
+      });
+    });
+  };
+
   // Maps values dynamically to KPI blocks
   const cards = [
     { 
@@ -110,7 +197,7 @@ const Dashboard = () => {
       value: `${stats.securityScore}/100`, 
       change: stats.securityScore >= 80 ? 'Good' : stats.securityScore >= 50 ? 'Warning' : 'Critical', 
       color: stats.securityScore >= 80 ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' : stats.securityScore >= 50 ? 'border-yellow-500/20 text-yellow-400 bg-yellow-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5', 
-      desc: 'Overall cloud posture index', 
+      desc: 'Overall posture index', 
       icon: <HiShieldCheck size={28} /> 
     },
     { 
@@ -180,7 +267,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative overflow-hidden">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
@@ -239,6 +326,7 @@ const Dashboard = () => {
         {/* Active findings panel loaded dynamically */}
         <div className="lg:col-span-2 bg-[#111827] border border-gray-800 rounded-xl p-6 cyber-glass">
           <h3 className="text-base font-semibold text-white mb-4">Critical & High Pending Actions</h3>
+          <p className="text-xs text-gray-400 -mt-2 mb-4">Click on any security finding card to launch AI Remediation guidance.</p>
           
           {findings.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-gray-800 rounded-lg">
@@ -251,18 +339,22 @@ const Dashboard = () => {
               {findings.map((finding) => {
                 // Determine styling based on severity level
                 let badgeStyle = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-                let cardStyle = 'bg-yellow-950/10 border-yellow-500/20';
+                let cardStyle = 'bg-yellow-950/10 border-yellow-500/20 hover:border-yellow-500/40';
 
                 if (finding.severity === 'Critical') {
                   badgeStyle = 'bg-red-500/20 text-red-400 border-red-500/30';
-                  cardStyle = 'bg-red-950/10 border-red-500/20';
+                  cardStyle = 'bg-red-950/10 border-red-500/20 hover:border-red-500/40';
                 } else if (finding.severity === 'High') {
                   badgeStyle = 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-                  cardStyle = 'bg-orange-950/10 border-orange-500/20';
+                  cardStyle = 'bg-orange-950/10 border-orange-500/20 hover:border-orange-500/40';
                 }
 
                 return (
-                  <div key={finding._id} className={`p-4 border rounded-lg flex items-start justify-between ${cardStyle}`}>
+                  <div
+                    key={finding._id}
+                    onClick={() => handleFindingSelect(finding)}
+                    className={`p-4 border rounded-lg flex items-start justify-between cursor-pointer active:scale-[0.99] hover:scale-[1.01] transition-all duration-150 ${cardStyle}`}
+                  >
                     <div>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${badgeStyle}`}>
                         {finding.severity}
@@ -303,6 +395,80 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* --- SLIDING DRAWER AI ASSISTANT PANEL --- */}
+      {selectedFinding && (
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+              <div className="pointer-events-auto w-screen max-w-md border-l border-gray-800 bg-gray-950 p-6 flex flex-col justify-between shadow-2xl">
+                
+                {/* Drawer Header */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-blue-400">
+                      <HiOutlineSparkles className="h-5 w-5 animate-pulse" />
+                      <h3 className="text-base font-bold tracking-tight text-white uppercase font-sans">AI Remediation Assistant</h3>
+                    </div>
+                    <button
+                      onClick={() => setSelectedFinding(null)}
+                      className="p-1 rounded-lg border border-gray-800 text-gray-500 hover:text-white hover:border-gray-700 bg-gray-900/50 active:scale-95 transition-all"
+                    >
+                      <HiX className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Vulnerability Metadata Header Card */}
+                  <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        selectedFinding.severity === 'Critical' 
+                          ? 'bg-red-500/20 text-red-400 border-red-500/30' 
+                          : selectedFinding.severity === 'High'
+                          ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      }`}>
+                        {selectedFinding.severity}
+                      </span>
+                      <span className="text-[10px] font-mono text-gray-500">
+                        {selectedFinding.resourceId?.service} • {selectedFinding.resourceId?.type}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white mt-2">{selectedFinding.title}</h4>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{selectedFinding.description}</p>
+                    <div className="border-t border-gray-800/80 pt-2.5 mt-2.5 text-[10px] text-gray-500 font-mono flex items-center justify-between">
+                      <span>CIS: {selectedFinding.complianceMapping?.cisAWS}</span>
+                      <span>NIST: {selectedFinding.complianceMapping?.nist}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Explanation Content Body */}
+                <div className="flex-1 my-6 overflow-y-auto pr-1 custom-scrollbar">
+                  {loadingAi ? (
+                    <div className="flex flex-col items-center justify-center h-[50vh] text-center space-y-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="text-xs text-gray-400 font-medium">Google Gemini is compiling audit recommendations...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 leading-relaxed">
+                      {renderMarkdown(aiResponse)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Drawer Footer Warning */}
+                <div className="border-t border-gray-800 pt-4 text-[10px] text-gray-500 leading-normal bg-gray-950">
+                  <span className="font-bold text-yellow-500 uppercase mr-1">Remediation Disclaimer:</span>
+                  AI suggestions are for guidance purposes. Always audit generated CLI command blocks inside isolated staging environments before deploying to live production infrastructures.
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

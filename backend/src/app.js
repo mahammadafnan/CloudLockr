@@ -39,6 +39,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/scan', require('./routes/scanRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 // Fallback route for unmatched requests (404)
 app.use((req, res, next) => {
