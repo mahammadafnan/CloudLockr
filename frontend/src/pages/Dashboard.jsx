@@ -9,13 +9,41 @@ import {
   HiOutlineShieldCheck,
   HiOutlineRefresh,
   HiOutlineTrendingUp,
-  HiOutlineClock
+  HiOutlineClock,
+  HiOutlineDownload
 } from 'react-icons/hi';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  // Trigger PDF Report Generation & Download Stream
+  const downloadReport = async () => {
+    setDownloading(true);
+    toast.promise(
+      axios.get('/api/reports/download', { responseType: 'blob' }),
+      {
+        loading: 'Compiling security audit findings and generating PDF report...',
+        success: (res) => {
+          setDownloading(false);
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'CloudLockr_Security_Report.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          return 'PDF report downloaded successfully!';
+        },
+        error: (err) => {
+          setDownloading(false);
+          return 'Failed to download report.';
+        }
+      }
+    ).catch(() => setDownloading(false));
+  };
   const [stats, setStats] = useState({
     securityScore: 100,
     totalResources: 0,
@@ -162,6 +190,15 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          <button
+            onClick={downloadReport}
+            disabled={downloading}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white border border-gray-700 rounded-lg text-sm font-semibold shadow-lg active:scale-95 transition-all duration-150"
+          >
+            <HiOutlineDownload className="h-4 w-4" />
+            <span>{downloading ? 'Downloading...' : 'Download PDF Report'}</span>
+          </button>
+          
           <button
             onClick={triggerScan}
             disabled={scanning}

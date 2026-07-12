@@ -38,6 +38,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/scan', require('./routes/scanRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
 
 // Fallback route for unmatched requests (404)
 app.use((req, res, next) => {
