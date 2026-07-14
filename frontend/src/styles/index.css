@@ -2,50 +2,245 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Apple-inspired design system — apple.com / iOS / macOS.
+ * White-first, minimal, generous whitespace, glassmorphic nav/cards.
+ */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --surface: #ffffff;
+  --surface-secondary: #f5f5f7;
+
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #6e6e73;
+  --accent: #f5f5f7;
+  --accent-foreground: #1d1d1f;
+
+  --destructive: #e30000;
+  --destructive-foreground: #ffffff;
+  --success: #35c759;
+  --warning: #ff9f0a;
+
+  --border: #d2d2d7;
+  --input: #d2d2d7;
+  --ring: #0071e3;
+
+  --chart-1: #0071e3;
+  --chart-2: #2997ff;
+  --chart-3: #35c759;
+  --chart-4: #ff9f0a;
+  --chart-5: #e30000;
+
+  --sidebar: #f5f5f7;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #0071e3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ffffff;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: #d2d2d7;
+  --sidebar-ring: #0071e3;
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-bg-dark: rgba(29, 29, 31, 0.72);
+  --glass-border-dark: rgba(255, 255, 255, 0.10);
+
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 20px 60px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  
+  --radius-xl: 1.5rem;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --surface: #000000;
+  --surface-secondary: #1d1d1f;
+
+  --card: #1d1d1f;
+  --card-foreground: #f5f5f7;
+  --popover: #1d1d1f;
+  --popover-foreground: #f5f5f7;
+
+  --primary: #2997ff;
+  --primary-hover: #0071e3;
+  --primary-foreground: #ffffff;
+
+  --secondary: #1d1d1f;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1d1d1f;
+  --muted-foreground: #86868b;
+  --accent: #1d1d1f;
+  --accent-foreground: #f5f5f7;
+
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #2997ff;
+
+  --sidebar: #1d1d1f;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+
+  --glass-bg: rgba(29, 29, 31, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.10);
+}
+
 @layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-[#0a0f1d] text-gray-100 selection:bg-brand-500 selection:text-white;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.47059;
+    letter-spacing: -0.022em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    color: var(--foreground);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.08349;
+  }
+  h1 { font-size: clamp(40px, 5vw, 80px); letter-spacing: -0.03em; font-weight: 600; }
+  h2 { font-size: clamp(32px, 3.5vw, 48px); letter-spacing: -0.028em; }
+  h3 { font-size: clamp(24px, 2.2vw, 32px); letter-spacing: -0.024em; }
+  h4 { font-size: 20px; letter-spacing: -0.02em; }
+  small, .caption { font-size: 13px; line-height: 1.38105; letter-spacing: -0.01em; color: var(--muted-foreground); }
+
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+  ::selection {
+    background-color: var(--primary);
+    color: #ffffff;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 9999px;
+    transition: background 300ms ease-out;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.32); }
+  .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.32); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent; }
+}
+
+@layer utilities {
+  .container-apple {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 22px;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-strong {
+    background: var(--background);
+    backdrop-filter: saturate(180%) blur(40px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .surface-elevated {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-xl);
+  }
+
+  .shadow-subtle { box-shadow: var(--shadow-subtle); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-float { box-shadow: var(--shadow-float); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+
+  .btn-apple {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 22px;
+    border-radius: 9999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.17648;
+    letter-spacing: -0.022em;
+    transition: background-color 240ms ease, transform 240ms ease;
+  }
+  
+  .btn-apple-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 22px;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    font-size: 17px;
+    font-weight: 400;
+    transition: background-color 240ms ease, color 240ms ease;
+  }
+
+  .hover-scale {
+    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
-::-webkit-scrollbar-track {
-  @apply bg-[#0c1325];
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-800 rounded-full hover:bg-gray-700 transition-colors;
+@keyframes slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
-
-/* Glassmorphism utility */
-.cyber-glass {
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Glow effects */
-.glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
-}
-.glow-green {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
-}
-.glow-red {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
-}
-
-/* Micro-animations */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(0.98); }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes scale-in {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

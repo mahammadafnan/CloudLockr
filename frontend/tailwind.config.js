@@ -8,35 +8,94 @@ export default {
   theme: {
     extend: {
       colors: {
-        // High fidelity cybersecurity palette
+        // Apple-inspired minimal palette
         brand: {
-          50: '#f4f6fa',
-          100: '#e9edf5',
-          200: '#cdd7eb',
-          300: '#a2b6dc',
-          400: '#6f8fc9',
-          500: '#4a6eb3',
-          600: '#385596',
-          700: '#2f457c',
-          800: '#2a3b67',
-          900: '#263357',
-          950: '#151c31', // Main dark background
+          50:  '#f5f9ff',
+          100: '#e8f1ff',
+          200: '#cfe1ff',
+          300: '#a6c8ff',
+          400: '#6ea6ff',
+          500: '#0071e3', // Apple system blue
+          600: '#0062c4',
+          700: '#0053a6',
+          800: '#004488',
+          900: '#00366d',
+          950: '#001b3a',
         },
-        cyber: {
-          bg: '#0a0f1d',
-          card: '#111827',
-          border: '#1f2937',
-          accent: '#3b82f6',
-          success: '#10b981',
-          warning: '#f59e0b',
-          danger: '#ef4444',
-          info: '#06b6d4',
-          muted: '#9ca3af',
-        }
+        surface: {
+          DEFAULT: '#000000',
+          raised:  '#0b0b0d',
+          card:    '#111114',
+          border:  'rgba(255,255,255,0.08)',
+          hover:   'rgba(255,255,255,0.06)',
+        },
+        ink: {
+          primary:   '#f5f5f7',
+          secondary: 'rgba(245,245,247,0.72)',
+          tertiary:  'rgba(245,245,247,0.48)',
+          quaternary:'rgba(245,245,247,0.24)',
+        },
+        accent: {
+          blue:    '#0071e3',
+          success: '#30d158',
+          warning: '#ff9f0a',
+          danger:  '#ff453a',
+          info:    '#64d2ff',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['Fira Code', 'Courier New', 'monospace'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'sans-serif'],
+        mono: ['SF Mono', 'Fira Code', 'ui-monospace', 'monospace'],
+      },
+      borderRadius: {
+        'sm':   '0.5rem',
+        DEFAULT:'0.75rem',
+        'md':   '1rem',
+        'lg':   '1.25rem',
+        'xl':   '1.5rem',
+        '2xl':  '1.75rem',
+        '3xl':  '2rem',
+        '4xl':  '2.5rem',
+      },
+      boxShadow: {
+        soft:   '0 8px 24px rgba(0,0,0,0.24)',
+        float:  '0 20px 60px rgba(0,0,0,0.35)',
+        subtle: '0 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.14)',
+        ring:   '0 0 0 1px rgba(255,255,255,0.06)',
+      },
+      backdropBlur: {
+        xs: '8px',
+        sm: '16px',
+        md: '24px',
+        lg: '40px',
+      },
+      transitionTimingFunction: {
+        'apple': 'cubic-bezier(0.22, 1, 0.36, 1)',
+      },
+      transitionDuration: {
+        250: '250ms',
+        350: '350ms',
+      },
+      keyframes: {
+        'fade-in':  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        'fade-up':  {
+          '0%':   { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-up': {
+          '0%':   { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'scale-in': {
+          '0%':   { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in':  'fade-in 300ms ease-out both',
+        'fade-up':  'fade-up 350ms ease-out both',
+        'slide-up': 'slide-up 350ms ease-out both',
+        'scale-in': 'scale-in 250ms ease-out both',
       },
     },
   },
