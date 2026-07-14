@@ -68,3 +68,48 @@ exports.getDashboardStats = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get all discovered resources
+// @route   GET /api/dashboard/resources
+// @access  Private
+exports.getResources = async (req, res, next) => {
+  try {
+    const resources = await Resource.find().sort({ service: 1, type: 1 });
+    res.status(200).json({
+      success: true,
+      resources
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all security findings
+// @route   GET /api/dashboard/findings
+// @access  Private
+exports.getFindings = async (req, res, next) => {
+  try {
+    const findings = await Finding.find().populate('resourceId').sort({ firstDetectedAt: -1 });
+    res.status(200).json({
+      success: true,
+      findings
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all scan logs
+// @route   GET /api/dashboard/scans
+// @access  Private
+exports.getScans = async (req, res, next) => {
+  try {
+    const scans = await Scan.find().sort({ startedAt: -1 });
+    res.status(200).json({
+      success: true,
+      scans
+    });
+  } catch (error) {
+    next(error);
+  }
+};
