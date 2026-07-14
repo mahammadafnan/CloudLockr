@@ -9,56 +9,56 @@
 :root {
   --radius: 0.75rem;
 
-  /* Midnight Indigo Dark Theme by Default */
-  --background: #060913;
-  --foreground: #f8fafc;
-  --surface: #0b0f19;
-  --surface-secondary: #111827;
+  /* Apple Dark Theme as Default */
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --surface: #1c1c1e;
+  --surface-secondary: #1c1c1e;
 
-  --card: rgba(17, 24, 39, 0.55);
-  --card-foreground: #f8fafc;
-  --popover: #0b0f19;
-  --popover-foreground: #f8fafc;
+  --card: rgba(28, 28, 30, 0.65);
+  --card-foreground: #f5f5f7;
+  --popover: #1c1c1e;
+  --popover-foreground: #f5f5f7;
 
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
   --primary-foreground: #ffffff;
 
-  --secondary: #1f2937;
-  --secondary-foreground: #f8fafc;
-  --muted: #111827;
-  --muted-foreground: #94a3b8;
-  --accent: #1e1b4b;
-  --accent-foreground: #e0e7ff;
+  --secondary: #1c1c1e;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1c1c1e;
+  --muted-foreground: #a1a1a6;
+  --accent: #2c2c2e;
+  --accent-foreground: #f5f5f7;
 
-  --destructive: #f43f5e;
+  --destructive: #ff3b30;
   --destructive-foreground: #ffffff;
-  --success: #10b981;
-  --warning: #fbbf24;
+  --success: #28cd41;
+  --warning: #ff9500;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: #3b82f6;
+  --border: #424245;
+  --input: #424245;
+  --ring: #0071e3;
 
-  --chart-1: #3b82f6;
+  --chart-1: #0071e3;
   --chart-2: #8b5cf6;
-  --chart-3: #10b981;
-  --chart-4: #fbbf24;
-  --chart-5: #f43f5e;
+  --chart-3: #28cd41;
+  --chart-4: #ff9500;
+  --chart-5: #ff3b30;
 
-  --sidebar: #090d16;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
+  --sidebar: #1c1c1e;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #0071e3;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #111827;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #3b82f6;
+  --sidebar-accent: #2c2c2e;
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: #424245;
+  --sidebar-ring: #0071e3;
 
-  --glass-bg: rgba(11, 15, 25, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-bg-dark: rgba(11, 15, 25, 0.65);
-  --glass-border-dark: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(28, 28, 30, 0.65);
+  --glass-border: #424245;
+  --glass-bg-dark: rgba(28, 28, 30, 0.65);
+  --glass-border-dark: #424245;
 
   --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
@@ -70,39 +70,39 @@
 
 /* Light override if class "light" is active */
 .light {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #1d1d1f;
   --surface: #ffffff;
-  --surface-secondary: #f1f5f9;
+  --surface-secondary: #f5f5f7;
 
-  --card: rgba(255, 255, 255, 0.85);
-  --card-foreground: #0f172a;
+  --card: rgba(255, 255, 255, 0.75);
+  --card-foreground: #1d1d1f;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #1d1d1f;
 
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
   --primary-foreground: #ffffff;
 
-  --secondary: #e2e8f0;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #6e6e73;
+  --accent: #f5f5f7;
+  --accent-foreground: #1d1d1f;
 
-  --destructive: #ef4444;
+  --destructive: #ff3b30;
   --destructive-foreground: #ffffff;
-  --success: #10b981;
-  --warning: #f59e0b;
+  --success: #28cd41;
+  --warning: #ff9500;
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+  --border: #d2d2d7;
+  --input: #d2d2d7;
+  --ring: #0071e3;
 
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
+  --sidebar: #f5f5f7;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-border: #d2d2d7;
 
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.06);
