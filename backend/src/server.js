@@ -8,6 +8,10 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
+    // Start background task schedulers
+    const { startScheduler } = require('./utils/scheduler');
+    startScheduler();
+
     // Start listening
     const server = app.listen(PORT, () => {
       console.log(`[Server] CloudLockr Backend is listening on port ${PORT}`);
