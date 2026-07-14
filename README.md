@@ -8,14 +8,6 @@ The platform features a **GenAI Security Assistant** powered by the **Google Gem
 
 ---
 
-## 📄 Mrudul's Resume Bullet Point (St. Joseph Engineering College)
-
-Copy and paste this high-impact highlight directly into your resume:
-
-> **Developed CloudLockr**, an AI-powered Cloud Security Posture Management (CSPM) platform using the MERN stack (MongoDB, Express, React, Node.js), AWS SDK v3, PDFKit, and the Google Gemini API. Engineered a decoupled rules engine to dynamically audit S3, EC2, Security Groups, IAM, and CloudTrail configurations against CIS Foundations Benchmarks, applying weighted scoring algorithms. Designed a sliding GenAI Remediation panel rendering risk explanations and copy-pasteable AWS CLI fix commands, and orchestrated the multi-service stack using Docker Compose and Nginx reverse proxy configurations.
-
----
-
 ## ⚙️ Tech Stack & Pillars
 
 *   **Frontend Client:** React (Vite), Tailwind CSS (Apple-style dark mode theme), Axios, React Router, React Icons, React Hot Toast, Chart.js.
