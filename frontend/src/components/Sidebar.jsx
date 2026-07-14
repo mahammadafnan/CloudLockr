@@ -40,19 +40,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <aside
-      className={`h-screen bg-sidebar border-r border-border flex flex-col justify-between transition-all duration-300 z-30 select-none ${
+      className={`h-screen bg-[#111827] border-r border-gray-800 flex flex-col justify-between transition-all duration-300 z-30 select-none ${
         isOpen ? 'w-64' : 'w-20'
       }`}
     >
       {/* Brand logo container */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-border">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center space-x-3 overflow-hidden">
           <div className="p-2 bg-blue-600/20 rounded-lg border border-blue-500/30 text-blue-500 animate-pulse-slow shrink-0">
             <HiShieldCheck size={24} />
           </div>
           {isOpen && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-wider text-foreground">
+              <span className="text-sm font-bold tracking-wider text-white">
                 Cloud<span className="text-blue-500">Lockr</span>
               </span>
               <span className="text-[8px] text-gray-500 font-mono tracking-widest uppercase">CSPM</span>
@@ -61,7 +61,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
         <button
           onClick={toggleSidebar}
-          className="p-1.5 rounded-lg text-ink-secondary hover:text-foreground hover:bg-sidebar-accent transition-colors"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
         >
           {isOpen ? <HiChevronLeft size={20} /> : <HiMenu size={20} />}
         </button>
@@ -76,8 +76,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) =>
               `flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive
-                  ? 'bg-blue-600/10 border border-blue-500/30 text-blue-500 font-semibold'
-                  : 'text-ink-secondary border border-transparent hover:text-foreground hover:bg-sidebar-accent/60'
+                  ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400'
+                  : 'text-gray-400 border border-transparent hover:text-white hover:bg-gray-800/60'
               }`
             }
           >
@@ -88,14 +88,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </nav>
 
       {/* User profile footer info block */}
-      <div className="p-4 border-t border-border bg-sidebar/30 space-y-4">
+      <div className="p-4 border-t border-gray-800 bg-[#0e1420]/50 space-y-4">
         <div className="flex items-center space-x-3 overflow-hidden">
           <div className="h-10 w-10 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0 uppercase">
             {user?.name?.slice(0, 2) || 'SA'}
           </div>
           {isOpen && (
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">{user?.name || 'Security Analyst'}</span>
+              <span className="text-sm font-semibold text-white truncate">{user?.name || 'Security Analyst'}</span>
               <span className="text-[10px] text-gray-500 font-mono font-medium truncate uppercase mt-0.5">
                 {user?.role || 'Analyst'}
               </span>

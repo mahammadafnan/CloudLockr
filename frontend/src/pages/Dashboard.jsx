@@ -264,21 +264,23 @@ const Dashboard = () => {
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div className="space-y-6 relative overflow-hidden">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Posture Dashboard</h2>
-          <p className="text-sm text-ink-secondary mt-1">
-            Real-time security posture checks for user <span className="text-blue-500 font-semibold font-mono">{user?.name}</span> ({user?.role})
+          <h2 className="text-2xl font-bold tracking-tight text-white">Posture Dashboard</h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Real-time security posture checks for user <span className="text-blue-400 font-semibold font-mono">{user?.name}</span> ({user?.role})
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={downloadReport}
             disabled={downloading}
-            className="flex items-center space-x-2 px-4 py-2 bg-surface-secondary hover:bg-sidebar-accent disabled:opacity-50 text-foreground border border-border rounded-lg text-sm font-semibold shadow-lg active:scale-95 transition-all duration-150"
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white border border-gray-700 rounded-lg text-sm font-semibold shadow-lg active:scale-95 transition-all duration-150"
           >
             <HiOutlineDownload className="h-4 w-4" />
             <span>{downloading ? 'Downloading...' : 'Download PDF Report'}</span>
@@ -300,18 +302,18 @@ const Dashboard = () => {
         {cards.map((card) => (
           <div
             key={card.title}
-            className={`p-6 border border-border rounded-xl cyber-glass flex flex-col justify-between h-40 hover:scale-[1.02] transition-all duration-200 cursor-pointer`}
+            className={`p-6 border rounded-xl cyber-glass glow-blue flex flex-col justify-between h-40 hover:scale-[1.02] transition-all duration-200 cursor-pointer ${card.color}`}
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary">{card.title}</p>
-                <p className="text-3xl font-extrabold text-foreground mt-2 tracking-tight">{card.value}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{card.title}</p>
+                <p className="text-3xl font-extrabold text-white mt-2 tracking-tight">{card.value}</p>
               </div>
-              <div className="p-2 rounded-lg bg-surface-secondary border border-border text-foreground">{card.icon}</div>
+              <div className="p-2 rounded-lg bg-gray-900/30 border border-white/5">{card.icon}</div>
             </div>
-            <div className="border-t border-border pt-3 flex items-center justify-between">
-              <span className="text-[10px] font-mono text-ink-secondary uppercase">{card.desc}</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-secondary border border-border text-foreground">
+            <div className="border-t border-white/5 pt-3 flex items-center justify-between">
+              <span className="text-[10px] font-mono text-gray-400 uppercase">{card.desc}</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
                 {card.change}
               </span>
             </div>
@@ -322,29 +324,29 @@ const Dashboard = () => {
       {/* Executive Highlights layout grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active findings panel loaded dynamically */}
-        <div className="lg:col-span-2 p-6 cyber-glass">
-          <h3 className="text-base font-semibold text-foreground mb-4">Critical & High Pending Actions</h3>
-          <p className="text-xs text-ink-secondary -mt-2 mb-4">Click on any security finding card to launch AI Remediation guidance.</p>
+        <div className="lg:col-span-2 bg-[#111827] border border-gray-800 rounded-xl p-6 cyber-glass">
+          <h3 className="text-base font-semibold text-white mb-4">Critical & High Pending Actions</h3>
+          <p className="text-xs text-gray-400 -mt-2 mb-4">Click on any security finding card to launch AI Remediation guidance.</p>
           
           {findings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-border rounded-lg">
+            <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-gray-800 rounded-lg">
               <HiOutlineShieldCheck className="h-12 w-12 text-emerald-400 mb-2" />
-              <p className="text-sm font-semibold text-foreground">No active issues found!</p>
-              <p className="text-xs text-ink-secondary mt-1">Your cloud configurations are compliant with target policies.</p>
+              <p className="text-sm font-semibold text-white">No active issues found!</p>
+              <p className="text-xs text-gray-500 mt-1">Your cloud configurations are compliant with target policies.</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               {findings.map((finding) => {
                 // Determine styling based on severity level
-                let badgeStyle = 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30';
-                let cardStyle = 'bg-yellow-500/5 border-yellow-500/20 hover:border-yellow-500/40';
+                let badgeStyle = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+                let cardStyle = 'bg-yellow-950/10 border-yellow-500/20 hover:border-yellow-500/40';
 
                 if (finding.severity === 'Critical') {
-                  badgeStyle = 'bg-red-500/20 text-red-500 border-red-500/30';
-                  cardStyle = 'bg-red-500/5 border-red-500/20 hover:border-red-500/40';
+                  badgeStyle = 'bg-red-500/20 text-red-400 border-red-500/30';
+                  cardStyle = 'bg-red-950/10 border-red-500/20 hover:border-red-500/40';
                 } else if (finding.severity === 'High') {
-                  badgeStyle = 'bg-orange-500/20 text-orange-500 border-orange-500/30';
-                  cardStyle = 'bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40';
+                  badgeStyle = 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+                  cardStyle = 'bg-orange-950/10 border-orange-500/20 hover:border-orange-500/40';
                 }
 
                 return (
@@ -357,8 +359,8 @@ const Dashboard = () => {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${badgeStyle}`}>
                         {finding.severity}
                       </span>
-                      <h4 className="text-sm font-semibold text-foreground mt-2">{finding.title}</h4>
-                      <p className="text-xs text-ink-secondary mt-1">{finding.description}</p>
+                      <h4 className="text-sm font-semibold text-white mt-2">{finding.title}</h4>
+                      <p className="text-xs text-gray-400 mt-1">{finding.description}</p>
                     </div>
                     <span className="text-xs font-mono text-gray-500 whitespace-nowrap ml-4">
                       {finding.resourceId?.service || 'Cloud Asset'}
@@ -371,24 +373,24 @@ const Dashboard = () => {
         </div>
 
         {/* Audit Details compliance gauges */}
-        <div className="p-6 cyber-glass">
-          <h3 className="text-base font-semibold text-foreground mb-4">Compliance Status</h3>
+        <div className="bg-[#111827] border border-gray-800 rounded-xl p-6 cyber-glass">
+          <h3 className="text-base font-semibold text-white mb-4">Compliance Status</h3>
           <div className="space-y-4 font-mono text-xs">
-            <div className="flex justify-between border-b border-border pb-2">
-              <span className="text-ink-secondary">CIS Foundations Benchmark:</span>
-              <span className="text-yellow-500 font-semibold">{Math.round(stats.complianceRate)}% Passed</span>
+            <div className="flex justify-between border-b border-gray-800 pb-2">
+              <span className="text-gray-400">CIS Foundations Benchmark:</span>
+              <span className="text-yellow-400 font-semibold">{Math.round(stats.complianceRate)}% Passed</span>
             </div>
-            <div className="flex justify-between border-b border-border pb-2">
-              <span className="text-ink-secondary">AWS Best Practices Audit:</span>
-              <span className="text-emerald-500 font-semibold">{Math.min(100, Math.round(stats.complianceRate + 5))}% Passed</span>
+            <div className="flex justify-between border-b border-gray-800 pb-2">
+              <span className="text-gray-400">AWS Best Practices Audit:</span>
+              <span className="text-emerald-400 font-semibold">{Math.min(100, Math.round(stats.complianceRate + 5))}% Passed</span>
             </div>
-            <div className="flex justify-between border-b border-border pb-2">
-              <span className="text-ink-secondary">Basic NIST framework:</span>
-              <span className="text-yellow-500 font-semibold">{Math.round(stats.complianceRate * 0.9)}% Passed</span>
+            <div className="flex justify-between border-b border-gray-800 pb-2">
+              <span className="text-gray-400">Basic NIST framework:</span>
+              <span className="text-yellow-400 font-semibold">{Math.round(stats.complianceRate * 0.9)}% Passed</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-ink-secondary">Scan Job Scheduler:</span>
-              <span className="text-emerald-500 font-semibold">Enabled (Daily)</span>
+              <span className="text-gray-400">Scan Job Scheduler:</span>
+              <span className="text-emerald-400 font-semibold">Enabled (Daily)</span>
             </div>
           </div>
         </div>
@@ -399,42 +401,42 @@ const Dashboard = () => {
         <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm">
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-              <div className="pointer-events-auto w-screen max-w-md border-l border-border bg-surface p-6 flex flex-col justify-between shadow-2xl">
+              <div className="pointer-events-auto w-screen max-w-md border-l border-gray-800 bg-gray-950 p-6 flex flex-col justify-between shadow-2xl">
                 
                 {/* Drawer Header */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 text-blue-500">
+                    <div className="flex items-center space-x-2 text-blue-400">
                       <HiOutlineSparkles className="h-5 w-5 animate-pulse" />
-                      <h3 className="text-base font-bold tracking-tight text-foreground uppercase font-sans">AI Remediation Assistant</h3>
+                      <h3 className="text-base font-bold tracking-tight text-white uppercase font-sans">AI Remediation Assistant</h3>
                     </div>
                     <button
                       onClick={() => setSelectedFinding(null)}
-                      className="p-1 rounded-lg border border-border text-ink-secondary hover:text-foreground bg-surface-secondary active:scale-95 transition-all"
+                      className="p-1 rounded-lg border border-gray-800 text-gray-500 hover:text-white hover:border-gray-700 bg-gray-900/50 active:scale-95 transition-all"
                     >
                       <HiX className="h-4 w-4" />
                     </button>
                   </div>
                   
                   {/* Vulnerability Metadata Header Card */}
-                  <div className="p-4 bg-surface-secondary border border-border rounded-lg">
+                  <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                         selectedFinding.severity === 'Critical' 
-                          ? 'bg-red-500/20 text-red-500 border-red-500/30' 
+                          ? 'bg-red-500/20 text-red-400 border-red-500/30' 
                           : selectedFinding.severity === 'High'
-                          ? 'bg-orange-500/20 text-orange-500 border-orange-500/30'
-                          : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
+                          ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                       }`}>
                         {selectedFinding.severity}
                       </span>
-                      <span className="text-[10px] font-mono text-ink-secondary">
+                      <span className="text-[10px] font-mono text-gray-500">
                         {selectedFinding.resourceId?.service} • {selectedFinding.resourceId?.type}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-foreground mt-2">{selectedFinding.title}</h4>
-                    <p className="text-xs text-ink-secondary mt-1 leading-relaxed">{selectedFinding.description}</p>
-                    <div className="border-t border-border pt-2.5 mt-2.5 text-[10px] text-ink-secondary font-mono flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white mt-2">{selectedFinding.title}</h4>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{selectedFinding.description}</p>
+                    <div className="border-t border-gray-800/80 pt-2.5 mt-2.5 text-[10px] text-gray-500 font-mono flex items-center justify-between">
                       <span>CIS: {selectedFinding.complianceMapping?.cisAWS}</span>
                       <span>NIST: {selectedFinding.complianceMapping?.nist}</span>
                     </div>
