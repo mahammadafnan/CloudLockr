@@ -8,94 +8,126 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Apple-inspired minimal palette
+        // Apple.com exact palette
+        background: '#ffffff',
+        foreground: '#1d1d1f',
+        surface: {
+          DEFAULT: '#ffffff',
+          secondary: '#f5f5f7',   // Apple off-white section band
+        },
+        ink: {
+          primary:   '#1d1d1f',   // near-black text
+          secondary: '#6e6e73',   // muted gray
+          tertiary:  '#86868b',
+        },
+        apple: {
+          blue:       '#0071e3',
+          blueHover:  '#0077ed',
+          blueDark:   '#2997ff',  // blue on dark bg
+          success:    '#35c759',
+          warning:    '#ff9f0a',
+          danger:     '#e30000',
+          dangerDark: '#ff453a',
+        },
+        border: {
+          DEFAULT: '#d2d2d7',     // Apple divider
+          dark:    'rgba(255,255,255,0.12)',
+        },
+        // Legacy aliases so old classes keep working
         brand: {
           50:  '#f5f9ff',
           100: '#e8f1ff',
           200: '#cfe1ff',
           300: '#a6c8ff',
           400: '#6ea6ff',
-          500: '#0071e3', // Apple system blue
+          500: '#0071e3',
           600: '#0062c4',
           700: '#0053a6',
           800: '#004488',
           900: '#00366d',
           950: '#001b3a',
         },
-        surface: {
-          DEFAULT: '#000000',
-          raised:  '#1c1c1e',
-          card:    'rgba(28, 28, 30, 0.65)',
-          border:  '#424245',
-          hover:   'rgba(255, 255, 255, 0.06)',
-        },
-        ink: {
-          primary:   '#f5f5f7',
-          secondary: '#a1a1a6',
-          tertiary:  'rgba(161, 161, 166, 0.48)',
-          quaternary:'rgba(161, 161, 166, 0.24)',
-        },
-        accent: {
-          blue:    '#0071e3',
-          success: '#28cd41',
-          warning: '#ff9500',
-          danger:  '#ff3b30',
-          info:    '#06b6d4',
-        },
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'sans-serif'],
-        mono: ['SF Mono', 'Fira Code', 'ui-monospace', 'monospace'],
+        sans: [
+          '-apple-system', 'BlinkMacSystemFont',
+          '"SF Pro Text"', '"SF Pro Display"',
+          '"Helvetica Neue"', '"Segoe UI"', 'Arial', 'sans-serif',
+        ],
+        display: [
+          '-apple-system', 'BlinkMacSystemFont',
+          '"SF Pro Display"', '"Helvetica Neue"', 'Arial', 'sans-serif',
+        ],
+        mono: ['"SF Mono"', 'ui-monospace', 'Menlo', '"Fira Code"', 'monospace'],
+      },
+      fontSize: {
+        // Apple type scale
+        'caption': ['13px', { lineHeight: '1.38', letterSpacing: '-0.01em' }],
+        'body':    ['17px', { lineHeight: '1.47', letterSpacing: '-0.022em' }],
+        'sub':     ['21px', { lineHeight: '1.38', letterSpacing: '-0.021em' }],
+        'h4':      ['24px', { lineHeight: '1.16', letterSpacing: '-0.022em' }],
+        'h3':      ['32px', { lineHeight: '1.12', letterSpacing: '-0.024em' }],
+        'h2':      ['48px', { lineHeight: '1.08', letterSpacing: '-0.028em' }],
+        'h1':      ['64px', { lineHeight: '1.05', letterSpacing: '-0.03em'  }],
+        'hero':    ['80px', { lineHeight: '1.05', letterSpacing: '-0.035em' }],
       },
       borderRadius: {
-        'sm':   '0.5rem',
-        DEFAULT:'0.75rem',
-        'md':   '1rem',
-        'lg':   '1.25rem',
-        'xl':   '1.5rem',
-        '2xl':  '1.75rem',
-        '3xl':  '2rem',
-        '4xl':  '2.5rem',
+        'sm':  '6px',
+        DEFAULT: '8px',
+        'md':  '12px',
+        'lg':  '16px',
+        'xl':  '20px',
+        '2xl': '28px',
+        '3xl': '36px',
+        'pill':'9999px',
       },
       boxShadow: {
-        soft:   '0 8px 24px rgba(0,0,0,0.24)',
-        float:  '0 20px 60px rgba(0,0,0,0.35)',
-        subtle: '0 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.14)',
-        ring:   '0 0 0 1px rgba(255,255,255,0.06)',
+        subtle: '0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03)',
+        card:   '0 4px 16px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)',
+        soft:   '0 8px 24px rgba(0,0,0,0.06)',
+        float:  '0 20px 60px rgba(0,0,0,0.10)',
       },
       backdropBlur: {
-        xs: '8px',
-        sm: '16px',
-        md: '24px',
-        lg: '40px',
+        nav: '20px',
+        xl:  '40px',
+      },
+      backdropSaturate: {
+        180: '1.8',
+      },
+      maxWidth: {
+        'apple': '1200px',
       },
       transitionTimingFunction: {
         'apple': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
       transitionDuration: {
         250: '250ms',
-        350: '350ms',
+        320: '320ms',
+        400: '400ms',
       },
       keyframes: {
-        'fade-in':  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        'fade-in':  {
+          '0%':   { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
         'fade-up':  {
-          '0%':   { opacity: '0', transform: 'translateY(8px)' },
+          '0%':   { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'slide-up': {
-          '0%':   { opacity: '0', transform: 'translateY(16px)' },
+          '0%':   { opacity: '0', transform: 'translateY(24px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'scale-in': {
-          '0%':   { opacity: '0', transform: 'scale(0.96)' },
+          '0%':   { opacity: '0', transform: 'scale(0.98)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
       animation: {
-        'fade-in':  'fade-in 300ms ease-out both',
-        'fade-up':  'fade-up 350ms ease-out both',
-        'slide-up': 'slide-up 350ms ease-out both',
-        'scale-in': 'scale-in 250ms ease-out both',
+        'fade-in':  'fade-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'fade-up':  'fade-up 400ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'slide-up': 'slide-up 400ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'scale-in': 'scale-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both',
       },
     },
   },
