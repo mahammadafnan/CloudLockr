@@ -11,7 +11,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1d] text-gray-100 flex overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden">
       {/* Sidebar navigation */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -23,8 +23,7 @@ const DashboardLayout = () => {
         {/* Dynamic Nested Page Content */}
         <main className="flex-grow p-6 relative">
           {/* Background Decorative Glow */}
-          <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] bg-blue-900/5 rounded-full blur-[100px] pointer-events-none"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-emerald-900/5 rounded-full blur-[100px] pointer-events-none"></div>
+          <div className="absolute top-1/4 left-1/3 w-[450px] h-[450px] bg-[#ff3c00]/5 rounded-full blur-[130px] pointer-events-none"></div>
           
           <div className="max-w-7xl mx-auto w-full relative z-10 animate-fade-in">
             <Outlet />

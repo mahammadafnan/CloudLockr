@@ -3,109 +3,66 @@
 @tailwind utilities;
 
 /*
- * Modern Cyber-Security Design System (Dark-First, Sleek Glassmorphism & Neon Accents)
+ * Premium Kinetic Design System (Dark-First, High Contrast, Electric Orange Accents)
  */
 
 :root {
   --radius: 0.75rem;
 
-  /* Apple Dark Theme as Default */
-  --background: #000000;
-  --foreground: #f5f5f7;
-  --surface: #1c1c1e;
-  --surface-secondary: #1c1c1e;
+  --background: #050505;
+  --foreground: #ffffff;
+  --surface: #101010;
+  --surface-secondary: #161616;
 
-  --card: rgba(28, 28, 30, 0.65);
-  --card-foreground: #f5f5f7;
-  --popover: #1c1c1e;
-  --popover-foreground: #f5f5f7;
+  --card: rgba(16, 16, 16, 0.85);
+  --card-foreground: #ffffff;
+  --popover: #101010;
+  --popover-foreground: #ffffff;
 
-  --primary: #0071e3;
-  --primary-hover: #0077ed;
+  --primary: #ff3c00;
+  --primary-hover: #ff5522;
   --primary-foreground: #ffffff;
 
-  --secondary: #1c1c1e;
-  --secondary-foreground: #f5f5f7;
-  --muted: #1c1c1e;
-  --muted-foreground: #a1a1a6;
-  --accent: #2c2c2e;
-  --accent-foreground: #f5f5f7;
+  --secondary: #161616;
+  --secondary-foreground: #ffffff;
+  --muted: #101010;
+  --muted-foreground: #8a8a8f;
+  --accent: #ff3c00;
+  --accent-foreground: #ffffff;
 
   --destructive: #ff3b30;
   --destructive-foreground: #ffffff;
   --success: #28cd41;
   --warning: #ff9500;
 
-  --border: #424245;
-  --input: #424245;
-  --ring: #0071e3;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #ff3c00;
 
-  --chart-1: #0071e3;
+  --chart-1: #ff3c00;
   --chart-2: #8b5cf6;
   --chart-3: #28cd41;
   --chart-4: #ff9500;
   --chart-5: #ff3b30;
 
-  --sidebar: #1c1c1e;
-  --sidebar-foreground: #f5f5f7;
-  --sidebar-primary: #0071e3;
+  --sidebar: #050505;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff3c00;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2c2c2e;
-  --sidebar-accent-foreground: #f5f5f7;
-  --sidebar-border: #424245;
-  --sidebar-ring: #0071e3;
+  --sidebar-accent: #161616;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #ff3c00;
 
-  --glass-bg: rgba(28, 28, 30, 0.65);
-  --glass-border: #424245;
-  --glass-bg-dark: rgba(28, 28, 30, 0.65);
-  --glass-border-dark: #424245;
+  --glass-bg: rgba(16, 16, 16, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
-  --shadow-float: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
+  --shadow-float: 0 20px 50px -12px rgba(0, 0, 0, 0.95);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.6);
   
   --radius-xl: 1.5rem;
-}
-
-/* Light override if class "light" is active */
-.light {
-  --background: #ffffff;
-  --foreground: #1d1d1f;
-  --surface: #ffffff;
-  --surface-secondary: #f5f5f7;
-
-  --card: rgba(255, 255, 255, 0.75);
-  --card-foreground: #1d1d1f;
-  --popover: #ffffff;
-  --popover-foreground: #1d1d1f;
-
-  --primary: #0071e3;
-  --primary-hover: #0077ed;
-  --primary-foreground: #ffffff;
-
-  --secondary: #f5f5f7;
-  --secondary-foreground: #1d1d1f;
-  --muted: #f5f5f7;
-  --muted-foreground: #6e6e73;
-  --accent: #f5f5f7;
-  --accent-foreground: #1d1d1f;
-
-  --destructive: #ff3b30;
-  --destructive-foreground: #ffffff;
-  --success: #28cd41;
-  --warning: #ff9500;
-
-  --border: #d2d2d7;
-  --input: #d2d2d7;
-  --ring: #0071e3;
-
-  --sidebar: #f5f5f7;
-  --sidebar-foreground: #1d1d1f;
-  --sidebar-border: #d2d2d7;
-
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.06);
 }
 
 @layer base {
@@ -119,8 +76,8 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
     font-family: -apple-system, BlinkMacSystemFont, "Outfit", "Inter", sans-serif;
     font-size: 16px;
     line-height: 1.5;
@@ -131,7 +88,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: "Outfit", "Inter", sans-serif;
-    color: var(--foreground);
+    color: var(--foreground) !important;
     font-weight: 700;
     line-height: 1.25;
   }
@@ -147,13 +104,11 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.12) !important;
     border-radius: 9999px;
     transition: background 300ms ease-out;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
-  .light ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.18); }
-  .light ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.32); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25) !important; }
   * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 }
 
@@ -167,19 +122,19 @@
 
   /* Cyberpunk Glassmorphism */
   .cyber-glass {
-    background: var(--glass-bg);
+    background: var(--glass-bg) !important;
     backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--glass-border) !important;
   }
 
   /* Cyber Glow Highlights */
   .glow-blue {
-    box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 20px -5px rgba(255, 60, 0, 0.15);
     transition: all 300ms ease;
   }
   .glow-blue:hover {
-    box-shadow: 0 0 25px -3px rgba(59, 130, 246, 0.35);
-    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 25px -3px rgba(255, 60, 0, 0.35);
+    border-color: rgba(255, 60, 0, 0.3);
   }
 
   .glow-purple {
@@ -197,16 +152,16 @@
     justify-content: center;
     padding: 10px 20px;
     border-radius: 0.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: #ff3c00;
     color: #ffffff;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 14px 0 rgba(255, 60, 0, 0.3);
     transition: all 250ms ease;
   }
   .btn-cyber:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px 0 rgba(59, 130, 246, 0.5);
+    box-shadow: 0 6px 20px 0 rgba(255, 60, 0, 0.5);
   }
 }
 
