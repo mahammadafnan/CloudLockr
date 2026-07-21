@@ -1,91 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import {
-  HiOutlineSun,
-  HiOutlineMoon,
-  HiOutlineBell,
-  HiOutlineSearch,
-  HiOutlineUserCircle,
-  HiMenu
-} from 'react-icons/hi';
+import { HiOutlineBell, HiMenu } from 'react-icons/hi';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const { user } = useAuth();
-  const [darkMode, setDarkMode] = useState(true); // Default to dark mode for global Kinetic theme
   const [alertsCount, setAlertsCount] = useState(3);
 
-  // Sync theme selection to HTML class List
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [darkMode]);
-
   return (
-    <header className="h-16 bg-[#050505]/80 backdrop-blur-md border-b border-white/5 px-6 flex items-center justify-between sticky top-0 z-20 select-none">
-      {/* Left items: sidebar hamburger and search */}
-      <div className="flex items-center space-x-4 flex-grow max-w-md">
+    <header className="h-16 px-8 flex items-center justify-between border-b border-[#e6e8eb] bg-white relative shrink-0 select-none">
+      {/* Left side: title */}
+      <div className="flex items-center gap-4">
         {!sidebarOpen && (
           <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded-full text-[#8a8a8f] hover:text-white hover:bg-white/5 transition"
+            className="p-1.5 rounded-lg border border-[#e6e8eb] bg-[#f9fafb] text-gray-500 hover:text-black transition"
           >
-            <HiMenu size={20} />
+            <HiMenu size={18} />
           </button>
         )}
-        <div className="relative w-full">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#8a8a8f]">
-            <HiOutlineSearch size={18} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search resources, findings, or compliance..."
-            className="w-full bg-white/5 border border-white/5 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-[#8a8a8f] focus:outline-none focus:bg-white/10 focus:border-white/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]"
-          />
-        </div>
+        <h1 className="text-xl font-bold text-black tracking-tight" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif' }}>
+          Dashboard
+        </h1>
       </div>
 
-      {/* Right items: user role state indicators, settings, profile */}
-      <div className="flex items-center space-x-4">
-        {/* Active Role status badge */}
-        <span className="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/5 border border-white/5 text-[#ff3c00]">
-          Role: {user?.role || 'Viewer'}
-        </span>
-
-        {/* Dark/Light mode theme toggle */}
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded-full text-[#8a8a8f] hover:text-white hover:bg-white/5 border border-white/5 bg-white/5 transition"
-          title="Toggle system theme color"
-        >
-          {darkMode ? <HiOutlineSun size={18} /> : <HiOutlineMoon size={18} />}
-        </button>
-
-        {/* Notifications list trigger */}
+      {/* Right side: widgets */}
+      <div className="flex items-center gap-4">
+        {/* Bell notification */}
         <button
           onClick={() => setAlertsCount(0)}
-          className="p-2 rounded-full text-[#8a8a8f] hover:text-white hover:bg-white/5 border border-white/5 bg-white/5 relative transition"
-          title="Security alerts"
+          className="relative w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f3f4f6] transition text-black"
         >
           <HiOutlineBell size={18} />
           {alertsCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center font-bold font-mono">
-              {alertsCount}
-            </span>
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span>
           )}
         </button>
 
-        {/* User profile dropdown trigger */}
-        <div className="flex items-center space-x-2 border-l border-white/5 pl-4">
-          <div className="flex flex-col text-right hidden sm:flex">
-            <span className="text-xs font-bold text-white">{user?.name || 'Afnan'}</span>
-            <span className="text-[10px] text-[#8a8a8f] font-semibold font-sans">online</span>
-          </div>
-          <HiOutlineUserCircle size={28} className="text-[#8a8a8f] hover:text-white transition-colors cursor-pointer" />
-        </div>
+        {/* Add custom widget style button */}
+        <button 
+          className="bg-black text-white hover:bg-black/90 text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm"
+          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+        >
+          Add Custom Widget
+        </button>
       </div>
     </header>
   );

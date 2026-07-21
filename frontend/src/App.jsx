@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Landing from './pages/Landing';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import CloudAccounts from './pages/CloudAccounts';
@@ -16,9 +17,9 @@ import SystemSettings from './pages/SystemSettings';
 import { Toaster } from 'react-hot-toast';
 
 const Unauthorized = () => (
-  <div className="bg-red-950/10 border border-red-500/20 rounded-xl p-8 text-center max-w-md mx-auto mt-20">
-    <h2 className="text-xl font-bold text-red-500 mb-2">Unauthorized Access</h2>
-    <p className="text-sm text-gray-400 mb-4">Your assigned role lacks authorization permissions to view this resource.</p>
+  <div className="bg-white border border-border-subtle rounded-xl p-8 text-center max-w-md mx-auto mt-20 shadow-sm">
+    <h2 className="text-xl font-bold text-on-surface mb-2">Unauthorized Access</h2>
+    <p className="text-sm text-on-surface-variant mb-4">Your assigned role lacks authorization permissions to view this resource.</p>
     <Navigate to="/dashboard" replace />
   </div>
 );
@@ -29,7 +30,8 @@ function App() {
       <BrowserRouter>
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <Routes>
-          {/* Public Auth Routes */}
+          {/* Public Landing & Auth Routes */}
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/unauthorized" element={<Unauthorized />} />

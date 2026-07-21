@@ -34,12 +34,11 @@ const ComplianceBenchmarks = () => {
   if (loading) {
     return (
       <div className="flex h-[40vh] items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
       </div>
     );
   }
 
-  // CIS Benchmarks mapping checklist matching active findings
   const cisControls = [
     { id: '1.1', section: 'IAM/Identity', title: 'Ensure CloudTrail is enabled in all regions', ruleRef: 'cloudtrail-logging-enabled', severity: 'High' },
     { id: '1.2', section: 'IAM/Identity', title: 'Ensure Multi-Factor Authentication (MFA) is enabled for all IAM users with console passwords', ruleRef: 'iam-mfa-console', severity: 'Medium' },
@@ -51,9 +50,7 @@ const ComplianceBenchmarks = () => {
     { id: '4.2', section: 'Security Groups', title: 'Ensure no Security Groups allow ingress from 0.0.0.0/0 to Port 3389 (RDP)', ruleRef: 'ec2-port3389-ingress', severity: 'Critical' }
   ];
 
-  // Audit checks map
   const auditedControls = cisControls.map((ctrl) => {
-    // Check if any active finding has the mapped compliance code
     const failures = findings.filter((f) => f.complianceMapping?.cisAWS === ctrl.id);
     const passed = failures.length === 0;
     return { ...ctrl, passed, failuresCount: failures.length };
@@ -63,44 +60,43 @@ const ComplianceBenchmarks = () => {
   const passedRate = Math.round((passedCount / cisControls.length) * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-black select-none font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Compliance Benchmarks</h2>
-          <p className="text-sm text-gray-400 mt-1">Audit status mapping configurations to standard CIS AWS Foundations benchmarks.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-black" style={{ letterSpacing: '-0.5px' }}>Compliance Benchmarks</h2>
+          <p className="text-xs text-gray-500 mt-1">Audit status mapping configurations to standard CIS AWS Foundations benchmarks.</p>
         </div>
         <button
           onClick={loadData}
-          className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold active:scale-95 transition-all"
+          className="flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-gray-50 text-black rounded-xl text-xs font-bold active:scale-95 transition-all border border-[#e6e8eb] shadow-sm"
         >
           <HiOutlineRefresh className="h-4 w-4" />
           <span>Recalculate Audits</span>
         </button>
       </div>
 
-      {/* Compliance Overview Card */}
+      {/* Compliance Overview Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 border border-gray-800 rounded-xl cyber-glass glow-blue flex items-center justify-between col-span-1 md:col-span-2">
+        <div className="p-6 bg-white border border-[#e6e8eb] rounded-[1.5rem] shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
           <div className="space-y-2">
-            <h3 className="text-base font-semibold text-white">CIS AWS Foundations Benchmark v1.4.0</h3>
-            <p className="text-xs text-gray-400 max-w-md">
+            <h3 className="text-sm font-bold text-black">CIS AWS Foundations Benchmark v1.4.0</h3>
+            <p className="text-xs text-gray-500 max-w-md leading-relaxed">
               Industry standard regulatory checklist covering baseline account setups, virtual boundaries, auditing configuration standards, and firewalls.
             </p>
-            <div className="text-[10px] text-gray-500 font-mono pt-2">
+            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider pt-2">
               Audited Controls: {passedCount} / {cisControls.length} Passed
             </div>
           </div>
-          
-          <div className="text-right">
-            <div className="text-4xl font-extrabold text-blue-400 font-mono">{passedRate}%</div>
-            <div className="text-[10px] text-gray-500 font-semibold tracking-wider uppercase mt-1">Compliance Rate</div>
+          <div className="text-right shrink-0">
+            <div className="text-4xl font-black text-black font-mono">{passedRate}%</div>
+            <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mt-1">Compliance Rate</div>
           </div>
         </div>
 
-        <div className="p-6 border border-gray-800 rounded-xl cyber-glass flex flex-col justify-center">
-          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Compliance Status</h4>
-          <p className="text-lg font-bold text-white mt-1 flex items-center space-x-2">
-            <HiOutlineShieldCheck className="h-5 w-5 text-emerald-400" />
+        <div className="p-6 bg-white border border-[#e6e8eb] rounded-[1.5rem] shadow-sm flex flex-col justify-center">
+          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Compliance Status</h4>
+          <p className="text-lg font-bold text-black mt-1.5 flex items-center space-x-2">
+            <HiOutlineShieldCheck className="h-5 w-5 text-black" />
             <span>{passedRate >= 80 ? 'Highly Secure' : passedRate >= 50 ? 'Warning' : 'Critical Exposure'}</span>
           </p>
           <p className="text-[10px] text-gray-500 mt-2 font-mono">Mapped against 8 critical policies</p>
@@ -108,43 +104,43 @@ const ComplianceBenchmarks = () => {
       </div>
 
       {/* Audit Checklist Table */}
-      <div className="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden cyber-glass">
+      <div className="bg-white border border-[#e6e8eb] rounded-[1.5rem] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-800 bg-black/40 text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                <th className="p-4">Control ID</th>
+              <tr className="border-b border-gray-100 bg-[#f9fafb] text-[9px] uppercase font-bold tracking-wider text-gray-400">
+                <th className="p-4 pl-6">Control ID</th>
                 <th className="p-4">Section</th>
                 <th className="p-4">Security Policy Rule</th>
                 <th className="p-4">Severity</th>
-                <th className="p-4">Audit Status</th>
+                <th className="p-4 pr-6">Audit Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800 text-xs">
+            <tbody className="divide-y divide-gray-50 text-[11px]">
               {auditedControls.map((ctrl) => (
-                <tr key={ctrl.id} className="hover:bg-white/5 transition-colors">
-                  <td className="p-4 font-mono font-semibold text-blue-400">{ctrl.id}</td>
-                  <td className="p-4 text-gray-400">{ctrl.section}</td>
-                  <td className="p-4 font-medium text-white">{ctrl.title}</td>
+                <tr key={ctrl.id} className="hover:bg-gray-50/50 transition">
+                  <td className="p-4 pl-6 font-mono font-bold text-black">{ctrl.id}</td>
+                  <td className="p-4 text-gray-500 font-medium">{ctrl.section}</td>
+                  <td className="p-4 font-bold text-black">{ctrl.title}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border text-black ${
                       ctrl.severity === 'Critical' 
-                        ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                        ? 'bg-[#ffe5e5] border-[#ffc0c0]' 
                         : ctrl.severity === 'High'
-                        ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                        ? 'bg-[#fff3e0] border-[#fdd9a0]'
+                        : 'bg-[#fff8e0] border-[#fce9a0]'
                     }`}>
                       {ctrl.severity}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 pr-6">
                     {ctrl.passed ? (
-                      <span className="inline-flex items-center space-x-1 text-emerald-400 font-semibold">
+                      <span className="inline-flex items-center space-x-1.5 text-[#2b6d34] font-bold">
                         <HiOutlineCheckCircle className="h-4 w-4" />
                         <span>Passed</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center space-x-1 text-rose-400 font-semibold" title={`${ctrl.failuresCount} failures raised`}>
+                      <span className="inline-flex items-center space-x-1.5 text-red-600 font-bold" title={`${ctrl.failuresCount} failures raised`}>
                         <HiOutlineXCircle className="h-4 w-4" />
                         <span>Failed ({ctrl.failuresCount})</span>
                       </span>
