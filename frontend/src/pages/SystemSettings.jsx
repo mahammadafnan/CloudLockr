@@ -136,9 +136,9 @@ const SystemSettings = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* System Diagnostics Details */}
-          <div className="p-8 bg-white border border-[#e6e8eb] rounded-[2rem] shadow-sm lg:col-span-2 space-y-6 relative overflow-hidden">
-            <div className="flex items-center space-x-3 border-b border-gray-100 pb-6">
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-black shadow-sm">
+          <div className="p-8 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[2rem] shadow-sm lg:col-span-2 space-y-6 relative overflow-hidden">
+            <div className="flex items-center space-x-3 border-b border-[#c3f4b0]/40 pb-6">
+              <div className="p-3 bg-white border border-[#c3f4b0]/40 rounded-xl text-black shadow-sm">
                 <HiOutlineServer size={22} />
               </div>
               <div>
@@ -177,24 +177,24 @@ const SystemSettings = () => {
               </div>
             </div>
 
-            {/* Performance charts mockup block (like Environmental Quality Red charts) */}
-            <div className="p-5 bg-gray-50 border border-gray-200 rounded-[1.5rem] mt-6 flex justify-between items-center">
+            {/* Performance charts mockup block */}
+            <div className="p-5 bg-white border border-[#c3f4b0]/40 rounded-[1.5rem] mt-6 flex justify-between items-center">
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-black">Database Connection Latency</h4>
                 <p className="text-[10px] text-gray-400">Response latency in milliseconds</p>
               </div>
-              <div className="flex items-end gap-1 h-12">
-                <div className="w-1.5 h-4 bg-[#ff4d4d] rounded-full"></div>
-                <div className="w-1.5 h-6 bg-[#ff4d4d] rounded-full"></div>
-                <div className="w-1.5 h-8 bg-[#ff4d4d] rounded-full"></div>
-                <div className="w-1.5 h-3 bg-[#ff4d4d] rounded-full"></div>
-                <div className="w-1.5 h-5 bg-[#ff4d4d] rounded-full"></div>
+              <div className="flex items-end gap-1.5 h-12">
+                <div className="w-1.5 h-4 bg-[#c3f4b0] rounded-full"></div>
+                <div className="w-1.5 h-6 bg-[#39ff14] rounded-full"></div>
+                <div className="w-1.5 h-8 bg-[#2b6d34] rounded-full"></div>
+                <div className="w-1.5 h-3 bg-[#c3f4b0] rounded-full"></div>
+                <div className="w-1.5 h-5 bg-[#39ff14] rounded-full"></div>
               </div>
             </div>
           </div>
 
           {/* Scanning scheduler config */}
-          <div className="p-8 bg-white border border-[#e6e8eb] rounded-[2rem] shadow-sm space-y-6 flex flex-col justify-between h-full min-h-[250px]">
+          <div className="p-8 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[2rem] shadow-sm space-y-6 flex flex-col justify-between h-full min-h-[250px]">
             <div className="space-y-3">
               <h3 className="text-base font-bold text-black flex items-center space-x-2">
                 <HiOutlineClock className="text-black h-5 w-5" />
@@ -204,7 +204,7 @@ const SystemSettings = () => {
                 Automated scanning jobs are scheduled via node-cron server schedulers to execute every midnight (00:00 UTC) dynamically.
               </p>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-4 border-t border-[#c3f4b0]/40">
               <span className="text-xs text-gray-500 font-bold">Daily Cron Audit:</span>
               <span className="px-3.5 py-1 rounded-full text-[10px] font-bold bg-[#e8fce0] border border-[#c3f4b0] text-[#2b6d34]">
                 ACTIVE
@@ -219,7 +219,7 @@ const SystemSettings = () => {
           
           {/* Compliance Overview Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 bg-white border border-[#e6e8eb] rounded-[2rem] shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
+            <div className="p-8 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[2rem] shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-black" style={{ letterSpacing: '-0.3px' }}>CIS AWS Foundations Benchmark v1.4.0</h3>
                 <p className="text-xs text-gray-500 max-w-md leading-relaxed">
@@ -235,7 +235,7 @@ const SystemSettings = () => {
               </div>
             </div>
 
-            <div className="p-8 bg-white border border-[#e6e8eb] rounded-[2rem] shadow-sm flex flex-col justify-center">
+            <div className="p-8 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[2rem] shadow-sm flex flex-col justify-center">
               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Compliance Status</h4>
               <p className="text-xl font-bold text-black mt-2 flex items-center space-x-2">
                 <HiOutlineShieldCheck className="h-5 w-5 text-black" />
@@ -246,11 +246,11 @@ const SystemSettings = () => {
           </div>
 
           {/* Audit Checklist Table */}
-          <div className="bg-white border border-[#e6e8eb] rounded-[2rem] overflow-hidden shadow-sm">
+          <div className="bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[2rem] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-[#f9fafb] text-[10px] uppercase font-bold tracking-wider text-gray-400">
+                  <tr className="border-b border-[#c3f4b0]/40 bg-[#f0fcf1]/80 text-[10px] uppercase font-bold tracking-wider text-gray-400">
                     <th className="p-5 pl-8">Control ID</th>
                     <th className="p-5">Section</th>
                     <th className="p-5">Security Policy Rule</th>
@@ -258,19 +258,19 @@ const SystemSettings = () => {
                     <th className="p-5 pr-8">Audit Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 text-xs">
+                <tbody className="divide-y divide-[#c3f4b0]/30 text-xs">
                   {auditedControls.map((ctrl) => (
-                    <tr key={ctrl.id} className="hover:bg-gray-50/50 transition">
+                    <tr key={ctrl.id} className="hover:bg-[#d8fad1]/30 transition">
                       <td className="p-5 pl-8 font-mono font-bold text-black">{ctrl.id}</td>
                       <td className="p-5 text-gray-500 font-bold">{ctrl.section}</td>
                       <td className="p-5 font-bold text-black text-sm">{ctrl.title}</td>
                       <td className="p-5">
                         <span className={`px-3 py-1 rounded-full text-[9px] font-bold border text-black ${
                           ctrl.severity === 'Critical' 
-                            ? 'bg-[#ffe5e5] border-[#ffc0c0]' 
+                            ? 'bg-[#ffe5e5] border-[#ffc0c0] text-[#ba1a1a]' 
                             : ctrl.severity === 'High'
-                            ? 'bg-[#fff3e0] border-[#fdd9a0]'
-                            : 'bg-[#fff8e0] border-[#fce9a0]'
+                            ? 'bg-[#fff3e0] border-[#fdd9a0] text-[#ff9500]'
+                            : 'bg-[#fff8e0] border-[#fce9a0] text-yellow-800'
                         }`}>
                           {ctrl.severity}
                         </span>
