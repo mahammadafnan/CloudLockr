@@ -8,6 +8,7 @@ const ec2Port3389Ingress = require('./ec2Port3389Ingress');
 const ebsVolumeEncryption = require('./ebsVolumeEncryption');
 const iamMfaConsole = require('./iamMfaConsole');
 const iamKeyAge90Days = require('./iamKeyAge90Days');
+const iamPasswordPolicy = require('./iamPasswordPolicy');
 const cloudTrailLoggingEnabled = require('./cloudTrailLoggingEnabled');
 
 // Registry of active rules
@@ -19,6 +20,7 @@ const rulesRegistry = [
   ebsVolumeEncryption,
   iamMfaConsole,
   iamKeyAge90Days,
+  iamPasswordPolicy,
   cloudTrailLoggingEnabled,
 ];
 

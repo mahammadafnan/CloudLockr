@@ -1,0 +1,285 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f9f9f9",
+                        "on-secondary-container": "#636262",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#ffb5a0",
+                        "primary-fixed-dim": "#ffb5a0",
+                        "surface-container-low": "#f3f3f3",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#fcfcff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#5b4039",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-variant": "#e2e2e2",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dadada",
+                        "on-tertiary-fixed": "#001e2e",
+                        "tertiary-fixed": "#c8e6ff",
+                        "surface-container": "#eeeeee",
+                        "inverse-surface": "#2f3131",
+                        "primary-fixed": "#ffdbd1",
+                        "on-primary-container": "#541200",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface": "#f9f9f9",
+                        "secondary": "#5f5e5e",
+                        "surface-tint": "#b02f00",
+                        "on-primary-fixed-variant": "#862200",
+                        "surface-bright": "#f9f9f9",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#ff5722",
+                        "secondary-container": "#e2dfde",
+                        "on-background": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#86cfff",
+                        "on-tertiary-fixed-variant": "#004c6d",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#474746",
+                        "tertiary": "#00628c",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#e4beb4",
+                        "outline": "#907067",
+                        "tertiary-container": "#007caf",
+                        "on-surface": "#1a1c1c",
+                        "on-primary-fixed": "#3b0900",
+                        "primary": "#b02f00",
+                        "surface-container-high": "#e8e8e8",
+                        "on-secondary-fixed": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "section-gap": "120px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "unit": "8px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-caps": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "display-xl-mobile": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "display-xl": ["96px", {"lineHeight": "100%", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "160%", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "100%", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["32px", {"lineHeight": "130%", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "160%", "fontWeight": "400"}],
+                        "headline-lg": ["48px", {"lineHeight": "120%", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl-mobile": ["48px", {"lineHeight": "110%", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+                    },
+                    "animation": {
+                        "scroll-wheel": "scroll-wheel 2s ease-in-out infinite"
+                    },
+                    "keyframes": {
+                        "scroll-wheel": {
+                            "0%": { "transform": "translateY(0)", "opacity": "1" },
+                            "100%": { "transform": "translateY(20px)", "opacity": "0" }
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style class="">.neon-green-btn:hover { background-color: #32e612 !important; }</style></head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container antialiased">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/10">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center">
+<div class="flex items-center gap-1.5"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8190cPQPuby81kmHIOrMUu1tAe4lm5_B2iYIpuC2GwLxTiBmasA5MmyLp3upLh7_qCXkmzWlJiITzj4psHxO_kyoGRYOxpgqPqiMck01UUclOdoi1cK8c1e2m-i_H7m-GVqpE7q4mtDnKZNxyD5mcUM4Fcv5M4n9XFXe6fpwOhzoUOlkjsDeh4nIW-m9MbIWkadX5ED5RokZHQlsAaSqc09bh3iLvdGGs9h1T9OCXO9_EwuBngrAb1bGMBZVHpycen7c" alt="CloudLockr Logo" class="h-[56px] w-auto">
+<span class="font-display-xl-mobile text-headline-md tracking-tighter text-on-surface font-extrabold">CloudLockr</span></div>
+<div class="flex items-center gap-6">
+<a class="font-label-caps text-label-caps text-on-surface hover:text-primary transition-colors duration-300 font-bold" href="#">Login</a>
+<button class="bg-primary text-white px-8 py-3 rounded-full font-label-caps text-label-caps font-bold hover:scale-95 transition-all duration-200 neon-green-btn" style="background-color: rgb(57, 255, 20); color: rgb(0, 0, 0);">Get Started</button>
+</div>
+</div>
+</header>
+<main class="pt-24">
+<!-- Hero Section-->
+<section class="relative min-h-[80vh] flex flex-col items-center justify-center text-center overflow-hidden px-margin-mobile">
+<div class="relative z-10 max-w-5xl mx-auto space-y-10">
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface leading-[1.05] tracking-tight">
+                We secure your <br>
+<span class="text-primary italic font-medium" style="color: rgb(57, 255, 20);">cloud</span> environment
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+                Real-time compliance monitoring, automated scans auditing, and GenAI remediation advisors for modern enterprise infrastructure.
+            </p>
+</div>
+<!-- Scroll Indicator -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 mt-20">
+<div class="w-[24px] h-[40px] rounded-full border-2 border-outline-variant/50 flex justify-center p-1.5">
+<div class="w-1.5 h-1.5 bg-primary rounded-full animate-scroll-wheel" style="background-color: rgb(57, 255, 20);"></div>
+</div>
+</div>
+</section>
+<!-- Core Services Section -->
+<section class="mt-20 py-24 bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="mb-16 text-center space-y-4">
+<span class="font-bold tracking-widest text-on-surface uppercase text-xl" style="font-family: Inter, sans-serif;">CAPABILITIES</span>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">Our Core Services</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Storage Buckets -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #fff0eb;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="database" style="color: rgb(0, 0, 0);">database</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">Storage Buckets</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Highly available, encrypted object storage for your critical assets with automated lifecycle policies.</p>
+</div>
+</div>
+<!-- Compute Instances -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #f1f5f9;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="memory" style="color: black;">memory</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">Compute Instances</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Secure, isolated virtual machines with real-time threat detection and vulnerability patching.</p>
+</div>
+</div>
+<!-- IAM -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #f5f3ff;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="badge" style="color: rgb(0, 0, 0);">badge</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">IAM</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Identity and Access Management with just-in-time permissions and deep privilege analysis.</p>
+</div>
+</div>
+<!-- Security Groups -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #f7fee7;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="lan" style="color: rgb(0, 0, 0);">lan</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">Security Groups</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Micro-segmentation rules that automatically adapt to your application's network topology.</p>
+</div>
+</div>
+<!-- Audit Logging -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #fff1f2;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="history_edu" style="color: rgb(0, 0, 0);">history_edu</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">Audit Logging</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Immutable forensic logs captured across all cloud regions with 10-year retention options.</p>
+</div>
+</div>
+<!-- AI Remediation -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start" style="background-color: #f0fdfa;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="auto_fix_high" style="color: rgb(0, 0, 0);">auto_fix_high</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">AI Remediation</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed">Intelligent bots that suggest and apply security fixes before vulnerabilities reach production.</p>
+</div>
+</div>
+<!-- PDF Reporting -->
+<div class="group relative p-8 rounded-lg border border-outline-variant/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 min-h-[220px] flex flex-col justify-start sm:col-span-2 lg:col-span-2" style="background-color: #fffbeb;">
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-2">
+<span class="material-symbols-outlined text-primary mb-6 text-3xl block transition-transform duration-500 group-hover:scale-110" data-icon="picture_as_pdf" style="color: rgb(0, 0, 0);">picture_as_pdf</span>
+<h3 class="font-headline-md text-xl font-bold text-on-surface">PDF Reporting</h3>
+</div>
+<div class="mt-4 opacity-0 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:max-h-40 group-hover:mt-2">
+<p class="font-body-md text-on-surface-variant text-sm leading-relaxed max-w-xl">Executive-ready compliance reports and technical debt summaries delivered to your inbox weekly.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-section-gap bg-background border-t border-outline-variant/10">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-24 flex flex-col md:flex-row justify-between items-start gap-gutter">
+<div class="space-y-8 max-w-sm">
+<div class="flex items-center gap-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCicPzYuMei0rmM60GaFDzDd4gDiVmKAbtnK8SfjKbG0mak-K2ub3jwdw3-EZbPgGoC4SNWkoVCw5GKx_EAESzeVHvAVYHTo8dqQNdXdewjs2rkvzDcSo5YRCClWfIf8s4_z91HCYEc-AIIxi1OAfAsAD6wCEhDwKzrHYabjaVF2Ahj7eA7e5J1bum9ecknZ9crcvLM9GEwT-euMYobv_Im7xGO70UdnJ7mMXC5zFpWFxPMx9rBtmTrpjWkvJl1A6a7qSY" alt="CloudLockr Logo" class="w-auto h-[56px]">
+<span class="font-display-xl-mobile text-headline-md tracking-tighter text-on-surface font-extrabold">CloudLockr</span></div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Next-generation cloud security platform for modern infrastructure teams who value speed without compromising safety.
+            </p>
+<div class="flex gap-4">
+<a class="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="share">share</span>
+</a>
+<a class="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="public">public</span>
+</a>
+<a class="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="groups">groups</span>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-16 md:gap-24">
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface font-bold tracking-widest uppercase">Platform</h4>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-all" href="#">Security Scan</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Cloud Audit</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Compliance</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Real-time alerts</a></li>
+</ul>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface font-bold tracking-widest uppercase">Resources</h4>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-all" href="#">Documentation</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">API Reference</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Case Studies</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Blog</a></li>
+</ul>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface font-bold tracking-widest uppercase">Legal</h4>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-all" href="#">Privacy Policy</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Terms of Use</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Security</a></li>
+<li class=""><a class="hover:text-primary transition-all" href="#">Cookie Settings</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-10 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center gap-6">
+<span class="font-label-caps text-[10px] text-on-surface-variant font-bold">©&nbsp; CLOUDLOCKR . ALL RIGHTS RESERVED.</span>
+<div class="flex gap-10 font-label-caps text-[10px] text-on-surface-variant font-bold">
+<span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> SYSTEM STATUS: OPERATIONAL</span>
+<span class=""><br></span>
+</div>
+</div>
+</footer>
+
+
+
+
+
+
+</body></html>

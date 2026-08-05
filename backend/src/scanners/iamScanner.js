@@ -4,6 +4,7 @@ const {
   ListAccessKeysCommand,
   ListMFADevicesCommand,
   GetLoginProfileCommand,
+  GetAccountPasswordPolicyCommand,
 } = require('@aws-sdk/client-iam');
 const Resource = require('../models/Resource');
 
@@ -103,6 +104,65 @@ const scanIAM = async (awsConfig, accountId) => {
         { new: true, upsert: true }
       );
       savedResources.push(updated);
+    }
+
+    // NEW: Audit Account Password Policy
+    try {
+      console.log('[IAM Scanner] Auditing global Account Password Policy...');
+      const policyRes = await iamClient.send(new GetAccountPasswordPolicyCommand({}));
+      const policy = policyRes.PasswordPolicy;
+      
+      const policyTags = {
+        MinimumPasswordLength: (policy && policy.MinimumPasswordLength) ? policy.MinimumPasswordLength.toString() : '8',
+        RequireSymbols: (policy && policy.RequireSymbols) ? 'true' : 'false',
+        RequireNumbers: (policy && policy.RequireNumbers) ? 'true' : 'false',
+      };
+
+      const policyResource = {
+        name: 'Account Password Policy',
+        service: 'IAM',
+        type: 'AccountPolicy',
+        cloudProvider: 'AWS',
+        accountId,
+        region: 'global',
+        arn: `arn:aws:iam::${accountId}:account/password-policy`,
+        status: 'active',
+        tags: policyTags,
+        lastScannedAt: new Date(),
+      };
+
+      const updatedPolicy = await Resource.findOneAndUpdate(
+        { arn: policyResource.arn },
+        policyResource,
+        { new: true, upsert: true }
+      );
+      savedResources.push(updatedPolicy);
+
+    } catch (err) {
+      if (err.name === 'NoSuchEntityException' || err.name === 'NoSuchEntity') {
+        console.log('[IAM Scanner] No custom password policy found. AWS defaults are in effect.');
+        // AWS Default is 8 characters, no symbols/numbers required
+        const defaultPolicyResource = {
+          name: 'Account Password Policy (Default)',
+          service: 'IAM',
+          type: 'AccountPolicy',
+          cloudProvider: 'AWS',
+          accountId,
+          region: 'global',
+          arn: `arn:aws:iam::${accountId}:account/password-policy`,
+          status: 'active',
+          tags: { MinimumPasswordLength: '8', RequireSymbols: 'false', RequireNumbers: 'false' },
+          lastScannedAt: new Date(),
+        };
+        const updatedPolicy = await Resource.findOneAndUpdate(
+          { arn: defaultPolicyResource.arn },
+          defaultPolicyResource,
+          { new: true, upsert: true }
+        );
+        savedResources.push(updatedPolicy);
+      } else {
+        console.error('[IAM Scanner] Error fetching password policy:', err.message);
+      }
     }
 
     return savedResources;

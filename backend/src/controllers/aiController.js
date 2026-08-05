@@ -2,10 +2,10 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Finding = require('../models/Finding');
 
 // @desc    Analyze vulnerability and return AI-remediation steps via Gemini Pro
-// @route   GET /api/ai/explain/:findingId
+// @route   POST /api/ai/remediate
 // @access  Private
 exports.explainFinding = async (req, res, next) => {
-  const { findingId } = req.params;
+  const { findingId } = req.body;
   console.log(`[AI Controller] Analyzing finding ID: ${findingId}`);
 
   try {
@@ -24,17 +24,17 @@ exports.explainFinding = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         isFallback: true,
-        analysis: generateFallbackAnalysis(finding),
+        remediation: generateFallbackAnalysis(finding),
       });
     }
 
     try {
       console.log('[AI Controller] Connecting to Google GenAI SDK...');
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Use flash as default fast model
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
       const prompt = `
-You are an expert DevSecOps and Cloud Security Architect. Analyze the following security vulnerability:
+You are a friendly, enthusiastic, and incredibly helpful Cloud Security Mentor. You explain complex cloud security concepts in a simple, easy-to-understand, and conversational way, exactly like you are guiding a friend. Analyze the following security vulnerability:
 - Service: ${finding.resourceId ? finding.resourceId.service : 'Cloud Asset'}
 - Resource Type: ${finding.resourceId ? finding.resourceId.type : 'Unknown'}
 - Resource ARN: ${finding.resourceArn}
@@ -42,14 +42,16 @@ You are an expert DevSecOps and Cloud Security Architect. Analyze the following 
 - Finding Title: ${finding.title}
 - Description: ${finding.description}
 
-Provide a response with exactly two sections using these headings:
+Provide a response with exactly three sections using these exact headings:
 
-### Security Risk Analysis
-Explain the exact security risk and blast radius in 3 short, high-impact bullet points.
+### Security Risk & Consequences
+Explain the exact security problem and its potential consequences (blast radius) in 2-3 short, easy-to-understand bullet points. Use a friendly, conversational tone (e.g. "Here is what happens if we leave this open!").
 
-### Remediation Command
-Provide the exact, copy-pasteable AWS CLI v2 command to remediate this configuration issue.
-Output ONLY the bash code block containing standard aws-cli commands, prefixed with comments explaining each flag. Do not add any extra conversational text.
+### AWS Console Remediation Steps
+Provide super clear, friendly, step-by-step instructions on how the user can fix this vulnerability manually in the AWS Console (e.g., "First, go to the EC2 Dashboard..."). Write it as if you are guiding a beginner over their shoulder.
+
+### CLI Remediation Command
+Provide the exact, copy-pasteable AWS CLI v2 command to remediate this issue. Output ONLY the bash code block.
 `;
 
       const result = await model.generateContent(prompt);
@@ -59,7 +61,7 @@ Output ONLY the bash code block containing standard aws-cli commands, prefixed w
       res.status(200).json({
         success: true,
         isFallback: false,
-        analysis: text,
+        remediation: text,
       });
     } catch (apiError) {
       console.error('[AI Controller] Google Gemini API request failed:', apiError.message);
@@ -68,7 +70,7 @@ Output ONLY the bash code block containing standard aws-cli commands, prefixed w
       res.status(200).json({
         success: true,
         isFallback: true,
-        analysis: generateFallbackAnalysis(finding),
+        remediation: generateFallbackAnalysis(finding),
       });
     }
   } catch (error) {
@@ -83,15 +85,22 @@ Output ONLY the bash code block containing standard aws-cli commands, prefixed w
  * @returns {String} Local markdown text
  */
 const generateFallbackAnalysis = (finding) => {
-  return `### Security Risk Analysis
-- **Resource Exposure:** The configurations of resource \`${finding.resourceArn.split('/').pop()}\` deviate from security baselines.
-- **Access Vectors:** Left unaddressed, unauthorized identities may discover and exploit this asset configuration drift.
-- **Compliance Gap:** Flagged as a **${finding.severity}** severity risk mapping to standard check policies (**${finding.complianceMapping ? finding.complianceMapping.cisAWS : 'CIS Baseline'}**).
+  return `### Security Risk & Consequences
+- **Here is the problem:** You have a misconfiguration in your ${finding.resourceId ? finding.resourceId.service : 'AWS'} resource!
+- **What happens if we leave this open:** Hackers constantly scan the internet for vulnerabilities just like this. If they find it, they could exploit it to steal data or take over the resource!
+- **Compliance penalty:** This violates the CIS Baseline and drops your security score.
 
-### Remediation Command
+### AWS Console Remediation Steps
+Don't worry, we can fix this easily! Here is exactly what to click in the AWS Console:
+1. Log in to your AWS Console and search for **${finding.resourceId ? finding.resourceId.service : 'the affected service'}**.
+2. Find the resource named \`${finding.resourceArn.split('/').pop()}\`.
+3. Click into its settings and look for the configuration mentioned in this finding: *${finding.title}*.
+4. Update the setting to the recommended secure configuration and click **Save**.
+
+### CLI Remediation Command
 \`\`\`bash
-# Recommended Fix Action (Local database fallback):
-# Execute standard fix instructions:
+# If you prefer to use the terminal instead of clicking in the UI, you can use the AWS CLI!
+# Follow these exact instructions:
 # ${finding.recommendation}
 
 # For detailed command syntax, visit:

@@ -24,6 +24,7 @@ const Dashboard = () => {
     findingsCount: { critical: 0, high: 0, medium: 0, low: 0, total: 0 }
   });
   const [findings, setFindings] = useState([]);
+  const [recentScans, setRecentScans] = useState([]);
 
   // Timeframe, periodIndex and hover index states for Security Posture index chart
   const [timeframe, setTimeframe] = useState('Week');
@@ -42,6 +43,7 @@ const Dashboard = () => {
       if (res.data.success) {
         setStats(res.data.stats);
         setFindings(res.data.recentFindings || []);
+        setRecentScans(res.data.recentScans || []);
       }
     } catch (error) {
       console.error('[Dashboard API] Error fetching metrics:', error.message);
@@ -341,8 +343,49 @@ const Dashboard = () => {
   };
   const periodsList = ['current', 'previous', 'historical'];
   const activePeriodKey = periodsList[periodIndex];
-  const selectedPeriodData = chartData[timeframe][activePeriodKey];
-  const currentData = selectedPeriodData.bars;
+  let selectedPeriodData = chartData[timeframe][activePeriodKey];
+  let currentData = selectedPeriodData.bars;
+
+  // Real-time data binding for dynamic charts
+  if (activePeriodKey === 'current' && recentScans.length > 0) {
+    let liveBars = [];
+    
+    if (timeframe === 'Day') {
+      liveBars = [...recentScans].reverse().map(scan => {
+        const date = new Date(scan.completedAt);
+        const label = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '');
+        return { label, score: scan.securityScore };
+      });
+    } else if (timeframe === 'Week') {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const grouped = {};
+      [...recentScans].reverse().forEach(scan => {
+        const d = new Date(scan.completedAt);
+        grouped[days[d.getDay()]] = scan.securityScore; 
+      });
+      liveBars = Object.keys(grouped).map(k => ({ label: k, score: grouped[k] }));
+    } else if (timeframe === 'Month') {
+      const grouped = {};
+      [...recentScans].reverse().forEach(scan => {
+        const d = new Date(scan.completedAt);
+        const weekNum = 'W' + Math.ceil(d.getDate() / 7);
+        grouped[weekNum] = scan.securityScore;
+      });
+      liveBars = Object.keys(grouped).map(k => ({ label: k, score: grouped[k] }));
+    }
+
+    if (liveBars.length > 0) {
+      const sum = liveBars.reduce((acc, curr) => acc + curr.score, 0);
+      const avg = sum / liveBars.length;
+      
+      currentData = liveBars;
+      selectedPeriodData = {
+        ...selectedPeriodData,
+        average: avg,
+        bars: liveBars
+      };
+    }
+  }
 
   return (
     <div className="space-y-6 text-black select-none font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>

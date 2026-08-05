@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
   HiOutlineSearch, 
@@ -13,8 +14,10 @@ import {
 } from 'react-icons/hi';
 
 const ResourceExplorer = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState([]);
+  const [findings, setFindings] = useState([]);
   const [search, setSearch] = useState('');
   const [serviceFilter, setServiceFilter] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
@@ -22,9 +25,16 @@ const ResourceExplorer = () => {
   const fetchResources = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/dashboard/resources');
-      if (res.data.success) {
-        setResources(res.data.resources || []);
+      const [resResources, resFindings] = await Promise.all([
+        axios.get('/api/dashboard/resources'),
+        axios.get('/api/dashboard/findings')
+      ]);
+      
+      if (resResources.data.success) {
+        setResources(resResources.data.resources || []);
+      }
+      if (resFindings.data.success) {
+        setFindings(resFindings.data.findings || []);
       }
     } catch (error) {
       console.error('[Resources API] Error:', error.message);
@@ -57,7 +67,7 @@ const ResourceExplorer = () => {
   const s3Count = resources.filter(r => r.service === 'S3').length;
   const ec2Count = resources.filter(r => r.service === 'EC2').length;
   const iamCount = resources.filter(r => r.service === 'IAM').length;
-  const sgCount = resources.filter(r => r.service === 'EC2' && r.type === 'SecurityGroup').length;
+  const sgCount = resources.filter(r => r.service === 'Security Groups').length;
 
   return (
     <div className="space-y-8 text-black select-none font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
@@ -149,8 +159,23 @@ const ResourceExplorer = () => {
               <tbody className="divide-y divide-gray-50 text-xs">
                 {filteredResources.map((res) => {
                   const isExpanded = expandedId === res._id;
-                  // Mock compliance score check for resource UI details
-                  const mockCompliance = res.service === 'S3' ? 88 : res.service === 'IAM' ? 75 : 92;
+                  
+                  // Dynamically calculate compliance based on active findings for this specific resource
+                  const resourceFindings = findings.filter(f => 
+                    f.status === 'Active' && 
+                    f.resourceId && 
+                    (f.resourceId === res._id || f.resourceId._id === res._id)
+                  );
+                  
+                  let realCompliance = 100;
+                  const hasCritical = resourceFindings.some(f => f.severity === 'Critical');
+                  const hasHigh = resourceFindings.some(f => f.severity === 'High');
+                  const hasMedium = resourceFindings.some(f => f.severity === 'Medium');
+                  
+                  if (hasCritical) realCompliance = 0;
+                  else if (hasHigh) realCompliance = 45;
+                  else if (hasMedium) realCompliance = 75;
+                  else if (resourceFindings.length > 0) realCompliance = 90;
                   
                   return (
                     <React.Fragment key={res._id}>
@@ -170,12 +195,12 @@ const ResourceExplorer = () => {
                             <div className="w-20 bg-gray-100 rounded-full h-1.5 overflow-hidden">
                               <div 
                                 className={`h-full rounded-full ${
-                                  mockCompliance >= 90 ? 'bg-[#39ff14]' : mockCompliance >= 75 ? 'bg-amber-400' : 'bg-red-500'
+                                  realCompliance >= 90 ? 'bg-[#39ff14]' : realCompliance >= 75 ? 'bg-amber-400' : 'bg-red-500'
                                 }`}
-                                style={{ width: `${mockCompliance}%` }}
+                                style={{ width: `${realCompliance}%` }}
                               ></div>
                             </div>
-                            <span className="text-[10px] font-bold text-gray-500 font-mono">{mockCompliance}% compliant</span>
+                            <span className="text-[10px] font-bold text-gray-500 font-mono">{realCompliance}% compliant</span>
                           </div>
                         </td>
                         <td className="p-5 pr-8 text-right text-gray-400">
@@ -203,7 +228,9 @@ const ResourceExplorer = () => {
                                     </div>
                                     <div className="flex justify-between">
                                       <span>Configuration Audit:</span>
-                                      <span className="text-black font-semibold">Verified compliant</span>
+                                      <span className={`${realCompliance === 100 ? 'text-black' : 'text-red-500'} font-semibold`}>
+                                        {realCompliance === 100 ? 'Verified compliant' : `${resourceFindings.length} active vulnerabilities`}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -215,7 +242,13 @@ const ResourceExplorer = () => {
                                       Configuration is scanned dynamically against CIS framework metrics to establish access controls sanity.
                                     </p>
                                   </div>
-                                  <button className="flex items-center justify-center space-x-1.5 px-3 py-2 bg-[#39ff14] hover:bg-[#32e612] text-black text-xs font-bold rounded-xl transition shadow-sm w-full">
+                                  <button 
+                                    onClick={() => {
+                                      toast.success('Opening AI Remediation dashboard...');
+                                      navigate('/findings');
+                                    }}
+                                    className="flex items-center justify-center space-x-1.5 px-3 py-2 bg-[#39ff14] hover:bg-[#32e612] text-black text-xs font-bold rounded-xl transition shadow-sm w-full"
+                                  >
                                     <HiOutlineSparkles size={16} />
                                     <span>Remediate Configuration</span>
                                   </button>

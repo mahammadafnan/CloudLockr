@@ -41,8 +41,8 @@ exports.getDashboardStats = async (req, res, next) => {
       .sort({ severity: 1, firstDetectedAt: -1 }) // Sorts by severity weight (if we map strings, sort by firstDetectedAt)
       .limit(5);
 
-    // 7. Fetch recent scans runs logs
-    const recentScans = await Scan.find().sort({ startedAt: -1 }).limit(5);
+    // 7. Fetch recent scans runs logs (limit 30 for historical charts)
+    const recentScans = await Scan.find().sort({ startedAt: -1 }).limit(30);
 
     res.status(200).json({
       success: true,

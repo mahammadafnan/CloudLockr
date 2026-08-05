@@ -5,6 +5,6 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 
 // Private AI Assistant explanation endpoint - Requires authenticated JWT session
-router.get('/explain/:findingId', protect, explainFinding);
+router.post('/remediate', protect, explainFinding);
 
 module.exports = router;
