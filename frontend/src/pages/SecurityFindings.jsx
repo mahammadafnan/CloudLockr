@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useCloud } from '../context/CloudContext';
 import { 
   HiOutlineSearch, 
   HiOutlineShieldExclamation, 
@@ -19,6 +20,7 @@ const SecurityFindings = () => {
   const [selectedFinding, setSelectedFinding] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
+  const [isFallback, setIsFallback] = useState(false);
   const [codeTab, setCodeTab] = useState('cli'); // 'cli' or 'terraform'
 
   const fetchFindings = async () => {
@@ -48,6 +50,7 @@ const SecurityFindings = () => {
       const res = await axios.post('/api/ai/remediate', { findingId: finding._id });
       if (res.data.success) {
         setAiResponse(res.data.remediation);
+        setIsFallback(res.data.isFallback);
       }
     } catch (error) {
       console.error('[AI Assistant API] Error:', error.message);
@@ -59,19 +62,32 @@ const SecurityFindings = () => {
 
   const renderMarkdown = (text) => {
     if (!text) return null;
+
+    const arnStr = selectedFinding?.resourceArn || '';
+    const currentProvider = (
+      selectedFinding?.resourceId?.cloudProvider ||
+      (arnStr.includes('gcp') ? 'GCP' : arnStr.includes('azure') || arnStr.includes('/subscriptions/') ? 'AZURE' : 'AWS')
+    ).toUpperCase();
+
+    const resourceName = selectedFinding?.resourceArn?.split('/')?.pop() || 'resource';
+
     const segments = text.split(/(```[\s\S]*?```)/g);
 
     return segments.map((seg, idx) => {
       if (seg.startsWith('```')) {
         const rawCode = seg.replace(/```[a-zA-Z]*/, '').replace(/```$/, '').trim();
         
-        // Mock Terraform code based on AWS CLI for developer tab
-        const isS3 = selectedFinding?.resourceId?.service === 'S3';
-        const terraformCode = isS3 
-          ? `resource "aws_s3_bucket_public_access_block" "remediation" {\n  bucket = "${selectedFinding?.name || 'bucket_name'}"\n\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}`
-          : `resource "aws_security_group_rule" "remediation" {\n  type              = "ingress"\n  from_port         = 22\n  to_port           = 22\n  protocol          = "tcp"\n  cidr_blocks       = ["10.0.0.0/16"]\n  security_group_id = "sg-123456"\n}`;
+        // Multi-Cloud Dynamic Terraform code snippet
+        let terraformCode = `resource "aws_s3_bucket_public_access_block" "remediation" {\n  bucket = "${resourceName}"\n\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}`;
+
+        if (currentProvider === 'GCP') {
+          terraformCode = `resource "google_storage_bucket" "remediation" {\n  name                        = "${resourceName}"\n  location                    = "US"\n  uniform_bucket_level_access = true\n}`;
+        } else if (currentProvider === 'AZURE') {
+          terraformCode = `resource "azurerm_storage_account" "remediation" {\n  name                            = "${resourceName}"\n  resource_group_name             = "CloudLockr-RG"\n  location                        = "Central India"\n  allow_nested_items_to_be_public = false\n}`;
+        }
 
         const activeCode = codeTab === 'cli' ? rawCode : terraformCode;
+        const cliTabTitle = currentProvider === 'GCP' ? 'GCP gcloud CLI' : currentProvider === 'AZURE' ? 'Azure CLI (az)' : 'AWS CLI Patch';
 
         return (
           <div key={idx} className="my-4 bg-[#0c0e0c] border border-[#1b241c] rounded-xl overflow-hidden font-mono text-xs text-white">
@@ -85,7 +101,7 @@ const SecurityFindings = () => {
                     codeTab === 'cli' ? 'text-[#39ff14]' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  AWS CLI Patch
+                  {cliTabTitle}
                 </button>
                 <button
                   onClick={() => setCodeTab('terraform')}
@@ -93,7 +109,7 @@ const SecurityFindings = () => {
                     codeTab === 'terraform' ? 'text-[#39ff14]' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Terraform Code
+                  Terraform ({currentProvider})
                 </button>
               </div>
               <button
@@ -137,10 +153,17 @@ const SecurityFindings = () => {
     });
   };
 
+  const { selectedCloud } = useCloud();
 
-  
+  // Filter findings by cloud provider first
+  const cloudFilteredFindings = findings.filter(f => {
+    if (selectedCloud === 'ALL') return true;
+    const provider = f.resourceId?.cloudProvider || (f.resourceArn.includes('gcp') ? 'GCP' : f.resourceArn.includes('azure') || f.resourceArn.includes('/subscriptions/') ? 'AZURE' : 'AWS');
+    return provider.toUpperCase() === selectedCloud.toUpperCase();
+  });
+
   // Correction check to avoid reference error
-  const filteredFindingsChecked = findings.filter((f) => {
+  const filteredFindingsChecked = cloudFilteredFindings.filter((f) => {
     const matchesSearch = 
       f.title.toLowerCase().includes(search.toLowerCase()) || 
       f.resourceArn.toLowerCase().includes(search.toLowerCase());
@@ -151,10 +174,10 @@ const SecurityFindings = () => {
   const severities = ['All', 'Critical', 'High', 'Medium', 'Low'];
 
   // Counts for top overview panel
-  const criticalCount = findings.filter(f => f.severity === 'Critical').length;
-  const highCount = findings.filter(f => f.severity === 'High').length;
-  const mediumCount = findings.filter(f => f.severity === 'Medium').length;
-  const lowCount = findings.filter(f => f.severity === 'Low').length;
+  const criticalCount = cloudFilteredFindings.filter(f => f.severity === 'Critical').length;
+  const highCount = cloudFilteredFindings.filter(f => f.severity === 'High').length;
+  const mediumCount = cloudFilteredFindings.filter(f => f.severity === 'Medium').length;
+  const lowCount = cloudFilteredFindings.filter(f => f.severity === 'Low').length;
 
   // Dynamic border outline logic matching Apple style card specs
   const getOutlineColor = (count) => {
@@ -228,14 +251,6 @@ const SecurityFindings = () => {
         <div className="flex border-b border-gray-100 gap-6">
           {severities.map((sev) => {
             const isActive = severityFilter === sev;
-            const countMap = {
-              'All': findings.length,
-              'Critical': criticalCount,
-              'High': highCount,
-              'Medium': mediumCount,
-              'Low': lowCount
-            };
-
             return (
               <button
                 key={sev}
@@ -294,6 +309,8 @@ const SecurityFindings = () => {
               badgeStyle = 'bg-gray-100 border-gray-200 text-gray-600';
             }
 
+            const providerLabel = finding.resourceId?.cloudProvider || (finding.resourceArn?.includes('gcp') ? 'GCP' : finding.resourceArn?.includes('azure') ? 'AZURE' : 'AWS');
+
             return (
               <div
                 key={finding._id}
@@ -305,8 +322,11 @@ const SecurityFindings = () => {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border text-black ${badgeStyle}`}>
                       {finding.severity}
                     </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-black text-[#39ff14] font-mono">
+                      {providerLabel}
+                    </span>
                     <span className="text-[10px] font-mono text-gray-500 font-bold">
-                      CIS: {finding.complianceMapping?.cisAWS} • NIST: {finding.complianceMapping?.nist}
+                      CIS: {finding.complianceMapping?.cisAWS || finding.complianceMapping?.cisGCP || finding.complianceMapping?.cisAzure || '5.1'} • NIST: {finding.complianceMapping?.nist || 'PR.AC-3'}
                     </span>
                   </div>
                   <h4 className="text-base font-bold text-black" style={{ letterSpacing: '-0.2px' }}>{finding.title}</h4>
@@ -362,15 +382,15 @@ const SecurityFindings = () => {
                       }`}>
                         {selectedFinding.severity}
                       </span>
-                      <span className="text-[10px] font-mono text-gray-500">
-                        {selectedFinding.resourceId?.service} • {selectedFinding.resourceId?.type}
+                      <span className="text-[10px] font-mono text-gray-500 font-bold">
+                        {selectedFinding.resourceId?.cloudProvider || (selectedFinding.resourceArn?.includes('gcp') ? 'GCP' : selectedFinding.resourceArn?.includes('azure') ? 'AZURE' : 'AWS')} • {selectedFinding.resourceId?.service}
                       </span>
                     </div>
                     <h4 className="text-sm font-bold text-black mt-2">{selectedFinding.title}</h4>
                     <p className="text-xs text-gray-600 mt-1 leading-relaxed">{selectedFinding.description}</p>
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 text-[10px] text-gray-500 font-mono flex items-center justify-between">
-                      <span>CIS: {selectedFinding.complianceMapping?.cisAWS}</span>
-                      <span>NIST: {selectedFinding.complianceMapping?.nist}</span>
+                      <span>CIS: {selectedFinding.complianceMapping?.cisAWS || selectedFinding.complianceMapping?.cisGCP || selectedFinding.complianceMapping?.cisAzure || '5.1'}</span>
+                      <span>NIST: {selectedFinding.complianceMapping?.nist || 'PR.AC-3'}</span>
                     </div>
                   </div>
                 </div>
@@ -390,9 +410,17 @@ const SecurityFindings = () => {
                 </div>
 
                 {/* Drawer Footer */}
-                <div className="border-t border-gray-200 pt-4 text-[10px] text-gray-500 leading-normal">
-                  <span className="font-bold text-amber-600 uppercase mr-1">Remediation Disclaimer:</span>
-                  AI suggestions are for guidance purposes. Always audit generated CLI command blocks inside isolated staging environments before deploying to live production infrastructures.
+                <div className="border-t border-gray-200 pt-4 flex flex-col space-y-2">
+                  {isFallback && (
+                    <div className="text-[10px] text-gray-500 font-medium">
+                      <span className="text-gray-700 font-bold mr-1">Note:</span>
+                      Displaying verified hardcoded remediation instructions.
+                    </div>
+                  )}
+                  <div className="text-[10px] text-gray-500 leading-normal">
+                    <span className="font-bold text-amber-600 uppercase mr-1">Remediation Disclaimer:</span>
+                    AI suggestions are for guidance purposes. Always audit generated CLI command blocks inside isolated staging environments before deploying to live production infrastructures.
+                  </div>
                 </div>
               </div>
             </div>

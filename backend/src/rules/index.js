@@ -11,6 +11,20 @@ const iamKeyAge90Days = require('./iamKeyAge90Days');
 const iamPasswordPolicy = require('./iamPasswordPolicy');
 const cloudTrailLoggingEnabled = require('./cloudTrailLoggingEnabled');
 
+// Load GCP rules
+const gcsPublicAccess = require('./gcsPublicAccess');
+const gceFirewallOpenSSH = require('./gceFirewallOpenSSH');
+const gcpIamOwnerRole = require('./gcpIamOwnerRole');
+const gcsPublicStorageAdmin = require('./gcsPublicStorageAdmin');
+const gcsLoggingEnabled = require('./gcsLoggingEnabled');
+const gcsVersioningEnabled = require('./gcsVersioningEnabled');
+const gcpServiceAccountUserKey = require('./gcpServiceAccountUserKey');
+
+// Load Azure rules
+const azureBlobPublicAccess = require('./azureBlobPublicAccess');
+const azureNsgOpenSSH = require('./azureNsgOpenSSH');
+const azureEntraMfa = require('./azureEntraMfa');
+
 // Registry of active rules
 const rulesRegistry = [
   s3PublicBlock,
@@ -22,6 +36,16 @@ const rulesRegistry = [
   iamKeyAge90Days,
   iamPasswordPolicy,
   cloudTrailLoggingEnabled,
+  gcsPublicAccess,
+  gceFirewallOpenSSH,
+  gcpIamOwnerRole,
+  gcsPublicStorageAdmin,
+  gcsLoggingEnabled,
+  gcsVersioningEnabled,
+  gcpServiceAccountUserKey,
+  azureBlobPublicAccess,
+  azureNsgOpenSSH,
+  azureEntraMfa,
 ];
 
 /**
@@ -51,7 +75,7 @@ const evaluateRules = async (resources) => {
             severity: rule.severity,
             resourceId: res._id,
             resourceArn: res.arn,
-            recommendation: rule.recommendation,
+            recommendation: rule.recommendation || rule.remediation || '',
             complianceMapping: rule.complianceMapping,
             docLink: rule.docLink,
             status: 'Active',

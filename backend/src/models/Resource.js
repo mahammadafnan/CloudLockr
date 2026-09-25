@@ -8,12 +8,12 @@ const ResourceSchema = new mongoose.Schema({
   },
   service: {
     type: String,
-    required: [true, 'Cloud service type is required (e.g., S3, EC2, IAM)'],
-    enum: ['EC2', 'S3', 'IAM', 'Security Groups', 'CloudTrail', 'VPC', 'EBS', 'RDS'],
+    required: [true, 'Cloud service type is required'],
+    // Multi-cloud service type string (AWS, GCP, Azure)
   },
   type: {
     type: String,
-    required: [true, 'Specific resource type is required (e.g., Instance, Bucket, Policy)'],
+    required: [true, 'Specific resource type is required'],
   },
   cloudProvider: {
     type: String,

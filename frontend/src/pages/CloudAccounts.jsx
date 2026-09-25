@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useCloud } from '../context/CloudContext';
 import { 
   HiOutlineCloud, 
   HiOutlineCheckCircle, 
@@ -16,6 +18,8 @@ const CloudAccounts = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const { selectedCloud, setSelectedCloud } = useCloud();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadStats = async () => {
@@ -41,6 +45,11 @@ const CloudAccounts = () => {
       setTestResult('success');
       toast.success('AWS Connection verified! IAM Role is fully authorized.');
     }, 1500);
+  };
+
+  const handleSelectCloudCard = (cloudId) => {
+    setSelectedCloud(cloudId);
+    toast.success(`Cloud provider filter set to ${cloudId}`);
   };
 
   if (loading) {
@@ -70,7 +79,14 @@ const CloudAccounts = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* AWS - Connected */}
-        <div className="bg-white border-2 border-[#c3f4b0] rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden">
+        <div 
+          onClick={() => handleSelectCloudCard('AWS')}
+          className={`bg-white rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden cursor-pointer active:scale-98 transition-all duration-300 ${
+            selectedCloud === 'AWS' 
+              ? 'border-2 border-[#39ff14] ring-4 ring-[#39ff14]/25 shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
+              : 'border-2 border-[#c3f4b0] hover:border-[#39ff14]/70 hover:shadow-md'
+          }`}
+        >
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#e8fce0] rounded-bl-full -z-10 opacity-60"></div>
           <div className="flex justify-between items-start">
             <div className="space-y-2">
@@ -78,51 +94,71 @@ const CloudAccounts = () => {
                 ACTIVE
               </span>
               <h3 className="text-lg font-bold mt-1 text-black">Amazon Web Services</h3>
-              <p className="text-xs text-gray-500">Account ID: 905************</p>
+              <p className="text-xs text-gray-500">Account ID: 464433361537</p>
             </div>
             <span className="text-2xl">🇺🇸</span>
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Default: us-east-1</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Default: eu-north-1</span>
             <span className="text-xs font-bold text-[#2b6d34] flex items-center gap-1">
               <HiOutlineCheckCircle className="h-4 w-4" /> Healthy
             </span>
           </div>
         </div>
 
-        {/* Microsoft Azure - Disabled */}
-        <div className="bg-white border border-[#e6e8eb] rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden opacity-75 hover:opacity-100 transition duration-200">
+        {/* Microsoft Azure - Active */}
+        <div 
+          onClick={() => handleSelectCloudCard('AZURE')}
+          className={`bg-white rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden cursor-pointer active:scale-98 transition-all duration-300 ${
+            selectedCloud === 'AZURE' 
+              ? 'border-2 border-[#39ff14] ring-4 ring-[#39ff14]/25 shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
+              : 'border-2 border-[#c3f4b0] hover:border-[#39ff14]/70 hover:shadow-md'
+          }`}
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#e8fce0] rounded-bl-full -z-10 opacity-60"></div>
           <div className="flex justify-between items-start">
             <div className="space-y-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest bg-gray-100 border border-gray-200 text-gray-500 uppercase">
-                DISCONNECTED
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest bg-[#e8fce0] border border-[#c3f4b0] text-black uppercase">
+                ACTIVE
               </span>
               <h3 className="text-lg font-bold mt-1 text-black">Microsoft Azure</h3>
-              <p className="text-xs text-gray-500">Tenant ID: Not configured</p>
+              <p className="text-xs text-gray-500 font-mono">ID: 48131ce1-65df-4433-bb54-cb966376f6b6</p>
             </div>
             <span className="text-2xl">🇪🇺</span>
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-gray-100">
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Default: West Europe</span>
-            <span className="text-xs font-bold text-gray-400">Not configured</span>
+            <span className="text-xs font-bold text-[#2b6d34] flex items-center gap-1">
+              <HiOutlineCheckCircle className="h-4 w-4" /> Healthy
+            </span>
           </div>
         </div>
 
-        {/* Google Cloud - Disabled */}
-        <div className="bg-white border border-[#e6e8eb] rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden opacity-75 hover:opacity-100 transition duration-200">
+        {/* Google Cloud - Active */}
+        <div 
+          onClick={() => handleSelectCloudCard('GCP')}
+          className={`bg-white rounded-[2rem] p-6 shadow-sm flex flex-col justify-between h-[180px] relative overflow-hidden cursor-pointer active:scale-98 transition-all duration-300 ${
+            selectedCloud === 'GCP' 
+              ? 'border-2 border-[#39ff14] ring-4 ring-[#39ff14]/25 shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
+              : 'border-2 border-[#c3f4b0] hover:border-[#39ff14]/70 hover:shadow-md'
+          }`}
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#e8fce0] rounded-bl-full -z-10 opacity-60"></div>
           <div className="flex justify-between items-start">
             <div className="space-y-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest bg-gray-100 border border-gray-200 text-gray-500 uppercase">
-                DISCONNECTED
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest bg-[#e8fce0] border border-[#c3f4b0] text-black uppercase">
+                ACTIVE
               </span>
               <h3 className="text-lg font-bold mt-1 text-black">Google Cloud Platform</h3>
-              <p className="text-xs text-gray-500">Project ID: Not configured</p>
+              <p className="text-xs text-gray-500 font-mono">ID: project-25a7942f-6ee6-4832-a57</p>
             </div>
-            <span className="text-2xl">🌏</span>
+            <span className="text-2xl">🌐</span>
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-gray-100">
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Default: us-central1</span>
-            <span className="text-xs font-bold text-gray-400">Not configured</span>
+            <span className="text-xs font-bold text-[#2b6d34] flex items-center gap-1">
+              <HiOutlineCheckCircle className="h-4 w-4" /> Healthy
+            </span>
           </div>
         </div>
       </div>

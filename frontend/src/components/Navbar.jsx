@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useCloud } from '../context/CloudContext';
 import { HiOutlineBell, HiMenu } from 'react-icons/hi';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {

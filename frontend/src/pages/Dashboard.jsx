@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useCloud } from '../context/CloudContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import {
@@ -12,6 +13,7 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { selectedCloud } = useCloud();
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -64,13 +66,14 @@ const Dashboard = () => {
       return;
     }
     setScanning(true);
+    const targetCloudLabel = selectedCloud === 'ALL' ? 'Multi-Cloud' : selectedCloud;
     toast.promise(
       axios.post('/api/scan'),
       {
-        loading: 'Discovering AWS cloud resources and executing policy audits...',
+        loading: `Discovering ${targetCloudLabel} cloud resources and executing policy audits...`,
         success: (res) => {
           fetchDashboardData();
-          return res.data.message || 'Security scan complete! Posture score recalculated.';
+          return `${targetCloudLabel} security scan complete! Posture score recalculated.`;
         },
         error: (err) => {
           setScanning(false);
@@ -178,6 +181,22 @@ const Dashboard = () => {
       );
     });
   };
+
+  const isDisconnectedCloud = false;
+
+  const displayStats = {
+    securityScore: isDisconnectedCloud ? 100.0 : stats.securityScore,
+    complianceRate: isDisconnectedCloud ? 100.0 : stats.complianceRate,
+    totalResources: isDisconnectedCloud ? 0 : stats.totalResources,
+    cloudAccountsCount: selectedCloud === 'ALL' ? stats.cloudAccountsCount : 1,
+    findingsCount: isDisconnectedCloud ? { critical: 0, high: 0, medium: 0, low: 0, total: 0 } : stats.findingsCount
+  };
+
+  const filteredDashboardFindings = findings.filter(f => {
+    if (selectedCloud === 'ALL') return true;
+    const provider = f.resourceId?.cloudProvider || (f.resourceArn?.includes('gcp') ? 'GCP' : f.resourceArn?.includes('azure') ? 'AZURE' : 'AWS');
+    return provider.toUpperCase() === selectedCloud.toUpperCase();
+  });
 
   if (loading) {
     return (
@@ -351,11 +370,25 @@ const Dashboard = () => {
     let liveBars = [];
     
     if (timeframe === 'Day') {
-      liveBars = [...recentScans].reverse().map(scan => {
+      const todayStr = new Date().toDateString();
+      const todayScans = recentScans.filter(scan => new Date(scan.completedAt).toDateString() === todayStr);
+
+      const grouped = {};
+      const counts = {};
+      [...todayScans].reverse().forEach(scan => {
         const date = new Date(scan.completedAt);
-        const label = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '');
-        return { label, score: scan.securityScore };
+        const hourLabel = date.toLocaleString('en-US', { hour: 'numeric', hour12: true }).toLowerCase();
+        if (!grouped[hourLabel]) {
+          grouped[hourLabel] = 0;
+          counts[hourLabel] = 0;
+        }
+        grouped[hourLabel] += scan.securityScore;
+        counts[hourLabel] += 1;
       });
+      liveBars = Object.keys(grouped).map(k => ({
+        label: k,
+        score: Math.round(grouped[k] / counts[k])
+      })).slice(-10); // Show max 10 hourly blocks for today
     } else if (timeframe === 'Week') {
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const grouped = {};
@@ -385,6 +418,16 @@ const Dashboard = () => {
         bars: liveBars
       };
     }
+  }
+
+  if (isDisconnectedCloud) {
+    currentData = [];
+    selectedPeriodData = {
+      ...selectedPeriodData,
+      average: 100.0,
+      trend: 'Not configured / 0 Assets',
+      bars: []
+    };
   }
 
   return (
@@ -436,7 +479,7 @@ const Dashboard = () => {
             <div className="space-y-1">
               <span className="text-[10px] text-[#39ff14] font-bold uppercase tracking-widest">Security Posture</span>
               <div className="text-2xl font-bold tracking-tight text-white mt-1">
-                {stats.securityScore.toFixed(2)}/100%
+                {displayStats.securityScore.toFixed(2)}/100%
               </div>
             </div>
             <div className="flex items-end gap-1 h-12">
@@ -457,7 +500,7 @@ const Dashboard = () => {
             <div className="space-y-1">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Compliance Rate</span>
               <h3 className="text-2xl font-bold tracking-tight text-black mt-1">
-                {stats.complianceRate.toFixed(2)}/100%
+                {displayStats.complianceRate.toFixed(2)}/100%
               </h3>
             </div>
             <div className="flex items-end gap-1 h-12">
@@ -477,7 +520,7 @@ const Dashboard = () => {
             <div className="space-y-1">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Audited Resources</span>
               <h3 className="text-2xl font-bold tracking-tight text-black mt-1">
-                {stats.totalResources.toLocaleString()} Assets
+                {displayStats.totalResources.toLocaleString()} Assets
               </h3>
             </div>
             <div className="flex items-end gap-1 h-12">
@@ -497,7 +540,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Apple Screen Time Inspired Security Posture Index Card */}
-        <div className="lg:col-span-2 bg-white rounded-[1.5rem] p-6 border border-[#e6e8eb] relative shadow-sm flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-2 bg-white rounded-[1.5rem] p-6 border border-[#e6e8eb] relative shadow-sm flex flex-col justify-between space-y-6 overflow-hidden">
           
           {/* Header Area with dynamic average and controls */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -619,8 +662,12 @@ const Dashboard = () => {
           <div>
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-2">Security Control Shield</span>
             <div className="space-y-1">
-              <h3 className="text-3xl font-black text-black tracking-tighter">8 CIS Rules</h3>
-              <p className="text-[10px] font-bold text-[#2b6d34]">★ Active automated policy checks</p>
+              <h3 className="text-3xl font-black text-black tracking-tighter">
+                {isDisconnectedCloud ? '0 CIS Rules' : '8 CIS Rules'}
+              </h3>
+              <p className="text-[10px] font-bold text-[#2b6d34]">
+                {isDisconnectedCloud ? '★ Account not configured' : '★ Active automated policy checks'}
+              </p>
             </div>
           </div>
 
@@ -629,13 +676,17 @@ const Dashboard = () => {
             {/* Storage buckets sub-stat */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-full bg-[#1b4a22] flex items-center justify-center text-[10px] text-[#39ff14]">S3</div>
+                <div className="w-6 h-6 rounded-full bg-[#1b4a22] flex items-center justify-center text-[10px] text-[#39ff14]">
+                  {selectedCloud === 'GCP' ? 'GCS' : 'S3'}
+                </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-black">Storage buckets</span>
                   <span className="text-[9px] text-gray-500">Security groups compliant</span>
                 </div>
               </div>
-              <span className="text-xs font-sans font-bold text-black">92% compliance</span>
+              <span className="text-xs font-sans font-bold text-black">
+                {isDisconnectedCloud ? '100% compliance' : '92% compliance'}
+              </span>
             </div>
 
             {/* Compute instances sub-stat */}
@@ -647,7 +698,9 @@ const Dashboard = () => {
                   <span className="text-[9px] text-gray-500">Access key age rotated</span>
                 </div>
               </div>
-              <span className="text-xs font-sans font-bold text-black">88% compliance</span>
+              <span className="text-xs font-sans font-bold text-black">
+                {isDisconnectedCloud ? '100% compliance' : '88% compliance'}
+              </span>
             </div>
           </div>
         </div>

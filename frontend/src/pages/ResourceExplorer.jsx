@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useCloud } from '../context/CloudContext';
 import { 
   HiOutlineSearch, 
   HiOutlineDatabase, 
@@ -15,6 +16,7 @@ import {
 
 const ResourceExplorer = () => {
   const navigate = useNavigate();
+  const { selectedCloud } = useCloud();
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState([]);
   const [findings, setFindings] = useState([]);
@@ -52,22 +54,31 @@ const ResourceExplorer = () => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Filter list
-  const filteredResources = resources.filter((res) => {
+  // Filter list by cloud provider first
+  const cloudFilteredResources = resources.filter(res => {
+    if (!selectedCloud || selectedCloud === 'ALL') return true;
+    const arnStr = res.arn || res.resourceArn || '';
+    const provider = res.cloudProvider || (arnStr.includes('gcp') ? 'GCP' : arnStr.includes('azure') ? 'AZURE' : 'AWS');
+    return provider.toUpperCase() === selectedCloud.toUpperCase();
+  });
+
+  const filteredResources = cloudFilteredResources.filter((res) => {
+    const nameStr = res.name || '';
+    const arnStr = res.arn || res.resourceArn || '';
     const matchesSearch = 
-      res.name.toLowerCase().includes(search.toLowerCase()) || 
-      res.resourceArn.toLowerCase().includes(search.toLowerCase());
+      nameStr.toLowerCase().includes(search.toLowerCase()) || 
+      arnStr.toLowerCase().includes(search.toLowerCase());
     const matchesService = serviceFilter === 'All' || res.service === serviceFilter;
     return matchesSearch && matchesService;
   });
 
-  const services = ['All', ...new Set(resources.map((r) => r.service))];
+  const services = ['All', ...new Set(cloudFilteredResources.map((r) => r.service))];
 
-  // Resource aggregation counts
-  const s3Count = resources.filter(r => r.service === 'S3').length;
-  const ec2Count = resources.filter(r => r.service === 'EC2').length;
-  const iamCount = resources.filter(r => r.service === 'IAM').length;
-  const sgCount = resources.filter(r => r.service === 'Security Groups').length;
+  // Resource aggregation counts (Supports AWS, GCP, and Azure)
+  const s3Count = cloudFilteredResources.filter(r => r.service === 'S3' || r.service === 'GCS' || r.service === 'BlobStorage').length;
+  const ec2Count = cloudFilteredResources.filter(r => r.service === 'EC2' || r.service === 'GCE' || r.service === 'AzureVM').length;
+  const iamCount = cloudFilteredResources.filter(r => r.service === 'IAM' || r.service === 'EntraID').length;
+  const sgCount = cloudFilteredResources.filter(r => r.service === 'Security Groups' || r.service === 'Firewall' || r.service === 'NSG').length;
 
   return (
     <div className="space-y-8 text-black select-none font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
@@ -76,7 +87,7 @@ const ResourceExplorer = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-black" style={{ letterSpacing: '-0.8px' }}>Resource Findings</h2>
-          <p className="text-sm text-gray-500 mt-1">Full inventory of AWS cloud assets discovered during security scans.</p>
+          <p className="text-sm text-gray-500 mt-1">Full inventory of cloud assets discovered during security scans.</p>
         </div>
         <button
           onClick={fetchResources}
@@ -90,19 +101,27 @@ const ResourceExplorer = () => {
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-[#f0fdf4] border border-[#c3f4b0] rounded-[1.5rem] p-5 shadow-sm">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">S3 Buckets</span>
+          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            {selectedCloud === 'AWS' ? 'S3 Buckets' : selectedCloud === 'GCP' ? 'GCS Buckets' : selectedCloud === 'AZURE' ? 'Blob Storage' : 'Storage Buckets'}
+          </span>
           <h3 className="text-2xl font-black text-black mt-1.5">{loading ? '-' : s3Count}</h3>
         </div>
         <div className="bg-[#f0fdfa] border border-[#bfebe3] rounded-[1.5rem] p-5 shadow-sm">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">EC2 Instances</span>
+          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            {selectedCloud === 'AWS' ? 'EC2 Instances' : selectedCloud === 'GCP' ? 'GCE Instances' : selectedCloud === 'AZURE' ? 'Azure VMs' : 'Compute Instances'}
+          </span>
           <h3 className="text-2xl font-black text-black mt-1.5">{loading ? '-' : ec2Count}</h3>
         </div>
         <div className="bg-[#fffdf0] border border-[#fce9a0] rounded-[1.5rem] p-5 shadow-sm">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">IAM Identities</span>
+          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            {selectedCloud === 'AZURE' ? 'Entra ID Users' : 'IAM Identities'}
+          </span>
           <h3 className="text-2xl font-black text-black mt-1.5">{loading ? '-' : iamCount}</h3>
         </div>
         <div className="bg-gray-50 border border-gray-200 rounded-[1.5rem] p-5 shadow-sm">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Security Groups</span>
+          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            {selectedCloud === 'AWS' ? 'Security Groups' : selectedCloud === 'GCP' ? 'VPC Firewalls' : selectedCloud === 'AZURE' ? 'NSG Rules' : 'Security Groups'}
+          </span>
           <h3 className="text-2xl font-black text-black mt-1.5">{loading ? '-' : sgCount}</h3>
         </div>
       </div>

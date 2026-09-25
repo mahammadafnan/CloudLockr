@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CloudProvider } from './context/CloudContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -27,8 +28,9 @@ const Unauthorized = () => (
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      <CloudProvider>
+        <BrowserRouter>
+          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <Routes>
           {/* Public Landing & Auth Routes */}
           <Route path="/" element={<Landing />} />
@@ -57,7 +59,8 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
+    </CloudProvider>
+  </AuthProvider>
   );
 }
 

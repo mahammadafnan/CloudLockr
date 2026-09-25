@@ -33,11 +33,17 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# Security scans & temp keys
+# Security scans & secret credential keys
 *.pem
 *.key
 credentials.json
 aws-keys.csv
+gcp-key.json
+azure-credentials.json
+backend/config/gcp-key.json
+backend/config/azure-credentials.json
+backend/src/clean_old_azure.js
+backend/src/trigger_rules_test.js
 
 # Project Documentation
 docs/
