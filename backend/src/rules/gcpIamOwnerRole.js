@@ -25,6 +25,6 @@ module.exports = {
     const hasAdminRole = role === 'roles/owner' || role === 'roles/editor';
     const isOldKey = parseInt(keyAge || '0', 10) > 90;
 
-    return hasAdminRole || isOldKey || resource.status === 'exposed';
+    return hasAdminRole || isOldKey;
   }
 };

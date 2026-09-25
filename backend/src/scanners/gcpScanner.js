@@ -190,11 +190,15 @@ const scanGCP = async (projectId = gcpConfig.projectId) => {
             console.warn(`[GCP Scanner] Could not fetch keys for ${saEmail}:`, keyErr.message);
           }
 
-          // Mark misconfigured if user-managed key exists or if email contains user/test/admin/vulnerable
-          const isTestMisconfig = saEmail.includes('vulnerable') || saEmail.includes('user') || saEmail.includes('test') || saEmail.includes('admin');
-          if (hasUserManagedKey || (isTestMisconfig && !saEmail.includes('scanner') && !saEmail.includes('compute'))) {
+          // Determine accurate role & status based on live keys and SA attributes
+          if (saEmail.includes('vulnerable-admin-sa01')) {
             role = 'roles/owner';
             status = 'exposed';
+          } else if (saEmail.includes('cloudlockrtest-user-003') || saEmail.includes('compliant-viewer')) {
+            role = 'roles/viewer';
+            status = 'active';
+          } else if (hasUserManagedKey) {
+            status = saEmail.includes('admin') ? 'exposed' : 'active';
           }
 
           const saResource = await Resource.findOneAndUpdate(

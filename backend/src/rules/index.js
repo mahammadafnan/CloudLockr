@@ -1,6 +1,6 @@
 const Finding = require('../models/Finding');
 
-// Load decoupled rule definition objects
+// Load AWS rules
 const s3PublicBlock = require('./s3PublicBlock');
 const s3Encryption = require('./s3Encryption');
 const ec2Port22Ingress = require('./ec2Port22Ingress');
@@ -11,7 +11,7 @@ const iamKeyAge90Days = require('./iamKeyAge90Days');
 const iamPasswordPolicy = require('./iamPasswordPolicy');
 const cloudTrailLoggingEnabled = require('./cloudTrailLoggingEnabled');
 
-// Load GCP rules
+// Load Comprehensive GCP Rule Engine
 const gcsPublicAccess = require('./gcsPublicAccess');
 const gceFirewallOpenSSH = require('./gceFirewallOpenSSH');
 const gcpIamOwnerRole = require('./gcpIamOwnerRole');
@@ -19,14 +19,28 @@ const gcsPublicStorageAdmin = require('./gcsPublicStorageAdmin');
 const gcsLoggingEnabled = require('./gcsLoggingEnabled');
 const gcsVersioningEnabled = require('./gcsVersioningEnabled');
 const gcpServiceAccountUserKey = require('./gcpServiceAccountUserKey');
+const gcsEncryption = require('./gcsEncryption');
+const gcsUniformBucketLevel = require('./gcsUniformBucketLevel');
+const gceFirewallOpenRDP = require('./gceFirewallOpenRDP');
+const gceDiskEncryption = require('./gceDiskEncryption');
+const gceInstancePublicIP = require('./gceInstancePublicIP');
+const gceShieldedVM = require('./gceShieldedVM');
+const gcpKeyAge90Days = require('./gcpKeyAge90Days');
+const gcpUserMfaConsole = require('./gcpUserMfaConsole');
+const gcpServiceAccountAdmin = require('./gcpServiceAccountAdmin');
+const gcpAuditLogging = require('./gcpAuditLogging');
+const gcpCloudSqlPublicIp = require('./gcpCloudSqlPublicIp');
+const gcpBigQueryPublicAccess = require('./gcpBigQueryPublicAccess');
+const gcpKmsKeyRotation = require('./gcpKmsKeyRotation');
 
 // Load Azure rules
 const azureBlobPublicAccess = require('./azureBlobPublicAccess');
 const azureNsgOpenSSH = require('./azureNsgOpenSSH');
 const azureEntraMfa = require('./azureEntraMfa');
 
-// Registry of active rules
+// Registry of active multi-cloud rules
 const rulesRegistry = [
+  // AWS Security Rules
   s3PublicBlock,
   s3Encryption,
   ec2Port22Ingress,
@@ -36,6 +50,8 @@ const rulesRegistry = [
   iamKeyAge90Days,
   iamPasswordPolicy,
   cloudTrailLoggingEnabled,
+
+  // GCP Security & CIS Benchmark Rules
   gcsPublicAccess,
   gceFirewallOpenSSH,
   gcpIamOwnerRole,
@@ -43,6 +59,21 @@ const rulesRegistry = [
   gcsLoggingEnabled,
   gcsVersioningEnabled,
   gcpServiceAccountUserKey,
+  gcsEncryption,
+  gcsUniformBucketLevel,
+  gceFirewallOpenRDP,
+  gceDiskEncryption,
+  gceInstancePublicIP,
+  gceShieldedVM,
+  gcpKeyAge90Days,
+  gcpUserMfaConsole,
+  gcpServiceAccountAdmin,
+  gcpAuditLogging,
+  gcpCloudSqlPublicIp,
+  gcpBigQueryPublicAccess,
+  gcpKmsKeyRotation,
+
+  // Azure Security Rules
   azureBlobPublicAccess,
   azureNsgOpenSSH,
   azureEntraMfa,
