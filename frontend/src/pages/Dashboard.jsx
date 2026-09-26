@@ -62,7 +62,7 @@ const Dashboard = () => {
 
   // Trigger Scanner Ingestion
   const triggerScan = async () => {
-    if (user.role === 'Viewer') {
+    if (user?.role === 'Viewer') {
       toast.error('Access Denied: Viewers cannot initiate manual scans.');
       return;
     }
@@ -182,6 +182,8 @@ const Dashboard = () => {
       );
     });
   };
+
+  const isDisconnectedCloud = false;
 
   const displayStats = {
     securityScore: stats.securityScore ?? 100,
