@@ -41,7 +41,8 @@ const Dashboard = () => {
   // Fetch Dashboard Stats and active findings from API
   const fetchDashboardData = async () => {
     try {
-      const res = await axios.get('/api/dashboard');
+      const params = selectedCloud && selectedCloud !== 'ALL' ? { provider: selectedCloud } : {};
+      const res = await axios.get('/api/dashboard', { params });
       if (res.data.success) {
         setStats(res.data.stats);
         setFindings(res.data.recentFindings || []);
@@ -57,7 +58,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [selectedCloud]);
 
   // Trigger Scanner Ingestion
   const triggerScan = async () => {
@@ -182,14 +183,12 @@ const Dashboard = () => {
     });
   };
 
-  const isDisconnectedCloud = false;
-
   const displayStats = {
-    securityScore: isDisconnectedCloud ? 100.0 : stats.securityScore,
-    complianceRate: isDisconnectedCloud ? 100.0 : stats.complianceRate,
-    totalResources: isDisconnectedCloud ? 0 : stats.totalResources,
-    cloudAccountsCount: selectedCloud === 'ALL' ? stats.cloudAccountsCount : 1,
-    findingsCount: isDisconnectedCloud ? { critical: 0, high: 0, medium: 0, low: 0, total: 0 } : stats.findingsCount
+    securityScore: stats.securityScore ?? 100,
+    complianceRate: stats.complianceRate ?? 100,
+    totalResources: stats.totalResources ?? 0,
+    cloudAccountsCount: selectedCloud === 'ALL' ? (stats.cloudAccountsCount || 3) : 1,
+    findingsCount: stats.findingsCount || { critical: 0, high: 0, medium: 0, low: 0, total: 0 }
   };
 
   const filteredDashboardFindings = findings.filter(f => {
@@ -479,7 +478,7 @@ const Dashboard = () => {
             <div className="space-y-1">
               <span className="text-[10px] text-[#39ff14] font-bold uppercase tracking-widest">Security Posture</span>
               <div className="text-2xl font-bold tracking-tight text-white mt-1">
-                {displayStats.securityScore.toFixed(2)}/100%
+                {displayStats.securityScore.toFixed(1)}%
               </div>
             </div>
             <div className="flex items-end gap-1 h-12">
@@ -500,7 +499,7 @@ const Dashboard = () => {
             <div className="space-y-1">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Compliance Rate</span>
               <h3 className="text-2xl font-bold tracking-tight text-black mt-1">
-                {displayStats.complianceRate.toFixed(2)}/100%
+                {displayStats.complianceRate.toFixed(1)}%
               </h3>
             </div>
             <div className="flex items-end gap-1 h-12">

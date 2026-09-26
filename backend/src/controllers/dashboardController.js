@@ -1,65 +1,83 @@
 const Resource = require('../models/Resource');
 const Finding = require('../models/Finding');
 const Scan = require('../models/Scan');
+const { calculateSecurityPosture } = require('../utils/postureCalculator');
 
 // @desc    Get dashboard metrics, charts data, and recent issues
 // @route   GET /api/dashboard
 // @access  Private
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    // 1. Fetch count totals
-    const totalResources = await Resource.countDocuments();
-    const cloudAccounts = await Resource.distinct('accountId');
-    const cloudAccountsCount = cloudAccounts.length;
+    const targetProvider = (req.query.provider || 'ALL').toUpperCase();
 
-    // 2. Fetch findings severity grouping counts
-    const criticalCount = await Finding.countDocuments({ severity: 'Critical', status: 'Active' });
-    const highCount = await Finding.countDocuments({ severity: 'High', status: 'Active' });
-    const mediumCount = await Finding.countDocuments({ severity: 'Medium', status: 'Active' });
-    const lowCount = await Finding.countDocuments({ severity: 'Low', status: 'Active' });
-    const informationalCount = await Finding.countDocuments({ severity: 'Informational', status: 'Active' });
-    
-    const totalFindings = criticalCount + highCount + mediumCount + lowCount + informationalCount;
+    // 1. Fetch live active resources
+    const allResources = await Resource.find({ status: { $ne: 'deleted' } }).lean();
+    const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId').lean();
 
-    // 3. Recalculate security score dynamically
-    // Formula: Initial = 100. Deductions: Critical = -20, High = -10, Medium = -5, Low = -2, Informational = 0.
-    // Score cannot drop below 0.
-    const deductions = (criticalCount * 20) + (highCount * 10) + (mediumCount * 5) + (lowCount * 2);
-    const securityScore = Math.max(0, 100 - deductions);
+    // Filter by provider if specified
+    const isFiltered = targetProvider !== 'ALL' && targetProvider !== 'MULTI-CLOUD';
+    const scopedResources = isFiltered
+      ? allResources.filter(r => r.cloudProvider === targetProvider)
+      : allResources;
 
-    // 4. Fetch compliance levels percentage (mock/aggregation check)
-    // In Sprint 8, we will build a real audit engine. For now, we count passing checks over total checks.
-    // We mock passing controls percentages based on finding volume.
-    const passedControlsPercent = totalFindings === 0 ? 100 : Math.max(45, 95 - (totalFindings * 1.5));
+    const scopedFindings = isFiltered
+      ? activeFindings.filter(f => {
+          const p = f.resourceId?.cloudProvider || (f.resourceArn?.includes('gcp') ? 'GCP' : f.resourceArn?.includes('azure') ? 'AZURE' : 'AWS');
+          return p.toUpperCase() === targetProvider;
+        })
+      : activeFindings;
 
-    // 5. Fetch latest completed scan detail
-    const latestScan = await Scan.findOne({ status: 'Completed' }).sort({ completedAt: -1 });
+    // 2. Calculate dynamic CSPM posture & compliance metrics
+    const postureMetrics = calculateSecurityPosture({
+      resources: scopedResources,
+      findings: scopedFindings,
+      provider: targetProvider
+    });
 
-    // 6. Fetch recent active findings (top 5 critical/high severity findings with resource data populated)
-    const recentFindings = await Finding.find({ status: 'Active' })
-      .populate('resourceId')
-      .sort({ severity: 1, firstDetectedAt: -1 }) // Sorts by severity weight (if we map strings, sort by firstDetectedAt)
-      .limit(5);
+    // 3. Compute per-provider breakdown
+    const providers = ['AWS', 'GCP', 'AZURE'];
+    const byProvider = {};
+    for (const p of providers) {
+      const pRes = allResources.filter(r => r.cloudProvider === p);
+      const pFind = activeFindings.filter(f => {
+        const prov = f.resourceId?.cloudProvider || (f.resourceArn?.includes('gcp') ? 'GCP' : f.resourceArn?.includes('azure') ? 'AZURE' : 'AWS');
+        return prov.toUpperCase() === p;
+      });
+      byProvider[p] = calculateSecurityPosture({
+        resources: pRes,
+        findings: pFind,
+        provider: p
+      });
+    }
 
-    // 7. Fetch recent scans runs logs (limit 30 for historical charts)
+    const cloudAccounts = [...new Set(scopedResources.map(r => r.accountId))].filter(Boolean);
+    const cloudAccountsCount = cloudAccounts.length || (isFiltered ? 1 : 3);
+
+    // 4. Fetch latest completed scan detail
+    const latestScanQuery = isFiltered ? { status: 'Completed', accountId: { $in: cloudAccounts } } : { status: 'Completed' };
+    let latestScan = await Scan.findOne(latestScanQuery).sort({ completedAt: -1 });
+    if (!latestScan) latestScan = await Scan.findOne({ status: 'Completed' }).sort({ completedAt: -1 });
+
+    // 5. Fetch recent active findings
+    const recentFindings = scopedFindings
+      .sort((a, b) => new Date(b.firstDetectedAt || 0) - new Date(a.firstDetectedAt || 0))
+      .slice(0, 10);
+
+    // 6. Fetch recent scans runs logs (limit 30 for historical charts)
     const recentScans = await Scan.find().sort({ startedAt: -1 }).limit(30);
 
     res.status(200).json({
       success: true,
       stats: {
-        securityScore,
-        totalResources,
+        securityScore: postureMetrics.securityScore,
+        totalResources: postureMetrics.totalResources,
+        healthyResourcesCount: postureMetrics.healthyResourcesCount,
+        affectedResourcesCount: postureMetrics.affectedResourcesCount,
         cloudAccountsCount,
-        complianceRate: Math.round(passedControlsPercent * 10) / 10,
+        complianceRate: postureMetrics.complianceRate,
         lastScanTime: latestScan ? latestScan.completedAt : null,
-        findingsCount: {
-          critical: criticalCount,
-          high: highCount,
-          medium: mediumCount,
-          low: lowCount,
-          informational: informationalCount,
-          total: totalFindings,
-        },
+        findingsCount: postureMetrics.findingsCount,
+        byProvider
       },
       recentFindings,
       recentScans,

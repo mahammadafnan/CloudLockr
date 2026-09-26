@@ -7,6 +7,7 @@ const Scan = require('../models/Scan');
 const Resource = require('../models/Resource');
 const Finding = require('../models/Finding');
 const { evaluateRules } = require('../rules/index');
+const { calculateSecurityPosture } = require('./postureCalculator');
 const { sendSecurityAlert } = require('./mailer');
 
 // Import scanners
@@ -168,19 +169,11 @@ exports.runProgrammaticScan = async (options = {}) => {
     // 6. Run security rules engine with active/resolved finding lifecycle
     const findingsResult = await evaluateRules(allActiveResources);
 
-    const totalFindings =
-      findingsResult.critical +
-      findingsResult.high +
-      findingsResult.medium +
-      findingsResult.low;
-
-    const deductions =
-      findingsResult.critical * 20 +
-      findingsResult.high * 10 +
-      findingsResult.medium * 5 +
-      findingsResult.low * 2;
-
-    const score = Math.max(0, 100 - deductions);
+    const posture = calculateSecurityPosture({
+      resources: allActiveResources,
+      findings: findingsResult,
+      provider: targetProvider
+    });
 
     // Save completed scan record
     currentScan.status = scanHasError ? 'Partial-Failure' : 'Completed';
@@ -193,13 +186,13 @@ exports.runProgrammaticScan = async (options = {}) => {
       low: findingsResult.low,
       informational: findingsResult.informational || 0
     };
-    currentScan.totalFindings = totalFindings;
-    currentScan.securityScore = score;
+    currentScan.totalFindings = posture.findingsCount.total;
+    currentScan.securityScore = posture.securityScore;
     currentScan.completedAt = new Date();
     await currentScan.save();
 
     console.log(`\n==================================================`);
-    console.log(`FINDINGS DETECTED: ${totalFindings} Active`);
+    console.log(`FINDINGS DETECTED: ${posture.findingsCount.total} Active`);
     console.log(`FINDINGS RESOLVED: ${findingsResult.resolvedCount || 0} Resolved`);
     console.log(`SCAN COMPLETED (Status: ${currentScan.status})`);
     console.log(`==================================================\n`);

@@ -2,6 +2,7 @@ const PDFDocument = require('pdfkit');
 const Resource = require('../models/Resource');
 const Finding = require('../models/Finding');
 const Scan = require('../models/Scan');
+const { calculateSecurityPosture } = require('../utils/postureCalculator');
 
 // @desc    Generate and stream security assessment PDF report
 // @route   GET /api/reports/download
@@ -11,19 +12,23 @@ exports.downloadSecurityReport = async (req, res, next) => {
 
   try {
     // 1. Fetch statistics from database collections
-    const totalResources = await Resource.countDocuments();
-    const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId');
+    const allResources = await Resource.find({ status: { $ne: 'deleted' } }).lean();
+    const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId').lean();
     const latestScan = await Scan.findOne({ status: 'Completed' }).sort({ completedAt: -1 });
 
-    const criticalCount = activeFindings.filter((f) => f.severity === 'Critical').length;
-    const highCount = activeFindings.filter((f) => f.severity === 'High').length;
-    const mediumCount = activeFindings.filter((f) => f.severity === 'Medium').length;
-    const lowCount = activeFindings.filter((f) => f.severity === 'Low').length;
-    const totalFindings = activeFindings.length;
+    const posture = calculateSecurityPosture({
+      resources: allResources,
+      findings: activeFindings,
+      provider: 'ALL'
+    });
 
-    // Calculate score
-    const deductions = (criticalCount * 20) + (highCount * 10) + (mediumCount * 5) + (lowCount * 2);
-    const securityScore = Math.max(0, 100 - deductions);
+    const criticalCount = posture.findingsCount.critical;
+    const highCount = posture.findingsCount.high;
+    const mediumCount = posture.findingsCount.medium;
+    const lowCount = posture.findingsCount.low;
+    const totalFindings = posture.findingsCount.total;
+    const totalResources = posture.totalResources;
+    const securityScore = posture.securityScore;
 
     // 2. Setup Express response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
