@@ -89,7 +89,9 @@ exports.getResources = async (req, res, next) => {
 // @access  Private
 exports.getFindings = async (req, res, next) => {
   try {
-    const findings = await Finding.find().populate('resourceId').sort({ firstDetectedAt: -1 });
+    const statusFilter = req.query.status ? req.query.status : 'Active';
+    const queryFilter = statusFilter === 'All' ? {} : { status: statusFilter };
+    const findings = await Finding.find(queryFilter).populate('resourceId').sort({ firstDetectedAt: -1 });
     res.status(200).json({
       success: true,
       findings

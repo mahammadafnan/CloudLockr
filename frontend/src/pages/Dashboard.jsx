@@ -68,7 +68,7 @@ const Dashboard = () => {
     setScanning(true);
     const targetCloudLabel = selectedCloud === 'ALL' ? 'Multi-Cloud' : selectedCloud;
     toast.promise(
-      axios.post('/api/scan'),
+      axios.post('/api/scan', { provider: selectedCloud }),
       {
         loading: `Discovering ${targetCloudLabel} cloud resources and executing policy audits...`,
         success: (res) => {

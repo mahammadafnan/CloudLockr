@@ -4,14 +4,19 @@ const { runProgrammaticScan } = require('../utils/scanEngine');
 // @route   POST /api/scan
 // @access  Private (Admin/Analyst)
 exports.triggerScan = async (req, res, next) => {
-  console.log('[Scan Controller] Manual scan trigger request received.');
+  const { provider, projectId } = req.body || {};
+  console.log(`[Scan Controller] SCAN REQUEST RECEIVED for Provider: ${provider || 'ALL'}, Project: ${projectId || 'default'}`);
 
   try {
-    const completedScan = await runProgrammaticScan('Manual');
+    const completedScan = await runProgrammaticScan({
+      provider: provider || 'ALL',
+      projectId,
+      triggerType: 'Manual'
+    });
     
     res.status(200).json({
       success: true,
-      message: 'AWS scan completed successfully. Configurations synchronized.',
+      message: `${provider || 'Multi-Cloud'} security scan completed successfully. Configurations synchronized.`,
       scan: completedScan,
     });
   } catch (error) {

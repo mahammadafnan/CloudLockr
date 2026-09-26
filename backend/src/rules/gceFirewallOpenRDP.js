@@ -15,18 +15,23 @@ module.exports = {
   docLink: 'https://cloud.google.com/vpc/docs/using-firewalls',
 
   check: (resource) => {
-    if (resource.cloudProvider !== 'GCP' || (resource.service !== 'Firewall' && resource.service !== 'GCE')) {
+    if (resource.cloudProvider !== 'GCP' || (resource.service !== 'Firewall' && resource.service !== 'GCE' && resource.service !== 'Security Groups')) {
       return false;
     }
     const tags = resource.tags || {};
     const port = typeof tags.get === 'function' ? tags.get('Port') : tags.Port;
     const source = typeof tags.get === 'function' ? tags.get('SourceRanges') : tags.SourceRanges;
     const action = typeof tags.get === 'function' ? tags.get('Action') : tags.Action;
+    const direction = typeof tags.get === 'function' ? tags.get('Direction') : tags.Direction;
 
-    const isOpenRdp = (port === '3389' || port === 'any' || port === '*') &&
-                      (source === '0.0.0.0/0' || source === '::/0') &&
-                      (action === 'ALLOW' || !action);
+    const isIngress = !direction || direction === 'INGRESS' || direction === 'Inbound';
+    const isAllow = !action || action === 'ALLOW' || action === 'Allow';
+    const isPublic = source === '0.0.0.0/0' || (typeof source === 'string' && source.includes('0.0.0.0/0')) || source === '::/0';
+    const isPort3389 = port === '3389' || (typeof port === 'string' && (port.includes('3389') || port === '0-65535' || port === '*'));
 
-    return isOpenRdp;
+    const protocols = typeof tags.get === 'function' ? tags.get('Protocols') : tags.Protocols;
+    const isTcp = !protocols || protocols.toLowerCase().includes('tcp') || protocols.toLowerCase().includes('all');
+
+    return isIngress && isAllow && isPublic && isPort3389 && isTcp;
   }
 };

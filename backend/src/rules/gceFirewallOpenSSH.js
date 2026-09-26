@@ -15,14 +15,23 @@ module.exports = {
   docLink: 'https://cloud.google.com/vpc/docs/firewalls',
   
   check: (resource) => {
-    if (resource.cloudProvider !== 'GCP' || resource.service !== 'Firewall') {
+    if (resource.cloudProvider !== 'GCP' || (resource.service !== 'Firewall' && resource.service !== 'Security Groups')) {
       return false;
     }
     const tags = resource.tags || {};
     const port = typeof tags.get === 'function' ? tags.get('Port') : tags.Port;
     const sourceRanges = typeof tags.get === 'function' ? tags.get('SourceRanges') : tags.SourceRanges;
     const action = typeof tags.get === 'function' ? tags.get('Action') : tags.Action;
+    const direction = typeof tags.get === 'function' ? tags.get('Direction') : tags.Direction;
 
-    return port === '22' && sourceRanges === '0.0.0.0/0' && action === 'ALLOW';
+    const isIngress = !direction || direction === 'INGRESS' || direction === 'Inbound';
+    const isAllow = !action || action === 'ALLOW' || action === 'Allow';
+    const isPublic = sourceRanges === '0.0.0.0/0' || (typeof sourceRanges === 'string' && sourceRanges.includes('0.0.0.0/0'));
+    const isPort22 = port === '22' || (typeof port === 'string' && (port.includes('22') || port === '0-65535' || port === '*'));
+
+    const protocols = typeof tags.get === 'function' ? tags.get('Protocols') : tags.Protocols;
+    const isTcp = !protocols || protocols.toLowerCase().includes('tcp') || protocols.toLowerCase().includes('all');
+
+    return isIngress && isAllow && isPublic && isPort22 && isTcp;
   }
 };

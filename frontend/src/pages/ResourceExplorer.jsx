@@ -75,9 +75,9 @@ const ResourceExplorer = () => {
   const services = ['All', ...new Set(cloudFilteredResources.map((r) => r.service))];
 
   // Resource aggregation counts (Supports AWS, GCP, and Azure)
-  const s3Count = cloudFilteredResources.filter(r => r.service === 'S3' || r.service === 'GCS' || r.service === 'BlobStorage').length;
-  const ec2Count = cloudFilteredResources.filter(r => r.service === 'EC2' || r.service === 'GCE' || r.service === 'AzureVM').length;
-  const iamCount = cloudFilteredResources.filter(r => r.service === 'IAM' || r.service === 'EntraID').length;
+  const s3Count = cloudFilteredResources.filter(r => r.service === 'S3' || r.service === 'GCS' || r.service === 'BlobStorage' || r.service === 'StorageAccount').length;
+  const ec2Count = cloudFilteredResources.filter(r => r.service === 'EC2' || r.service === 'GCE' || r.service === 'AzureVM' || r.service === 'VirtualMachine').length;
+  const iamCount = cloudFilteredResources.filter(r => r.service === 'IAM' || r.service === 'EntraID' || r.service === 'RoleAssignment').length;
   const sgCount = cloudFilteredResources.filter(r => r.service === 'Security Groups' || r.service === 'Firewall' || r.service === 'NSG').length;
 
   return (

@@ -1,4 +1,5 @@
 const Finding = require('../models/Finding');
+const Resource = require('../models/Resource');
 
 // Load AWS rules
 const s3PublicBlock = require('./s3PublicBlock');
@@ -33,10 +34,23 @@ const gcpCloudSqlPublicIp = require('./gcpCloudSqlPublicIp');
 const gcpBigQueryPublicAccess = require('./gcpBigQueryPublicAccess');
 const gcpKmsKeyRotation = require('./gcpKmsKeyRotation');
 
-// Load Azure rules
+// Load Comprehensive CIS Azure Foundations Rule Engine
 const azureBlobPublicAccess = require('./azureBlobPublicAccess');
+const azureStorageHttpsOnly = require('./azureStorageHttpsOnly');
+const azureStorageMinTls = require('./azureStorageMinTls');
+const azureStoragePublicNetwork = require('./azureStoragePublicNetwork');
+const azureStorageCmek = require('./azureStorageCmek');
 const azureNsgOpenSSH = require('./azureNsgOpenSSH');
+const azureNsgOpenRDP = require('./azureNsgOpenRDP');
+const azureNsgAllOpen = require('./azureNsgAllOpen');
+const azureVmPublicIp = require('./azureVmPublicIp');
+const azureDiskCmek = require('./azureDiskCmek');
 const azureEntraMfa = require('./azureEntraMfa');
+const azureKeyVaultPurgeProtection = require('./azureKeyVaultPurgeProtection');
+const azureKeyVaultPublicNetwork = require('./azureKeyVaultPublicNetwork');
+const azureSqlPublicNetwork = require('./azureSqlPublicNetwork');
+const azureSqlTdeDisabled = require('./azureSqlTdeDisabled');
+const azureActivityLogAlert = require('./azureActivityLogAlert');
 
 // Registry of active multi-cloud rules
 const rulesRegistry = [
@@ -73,49 +87,88 @@ const rulesRegistry = [
   gcpBigQueryPublicAccess,
   gcpKmsKeyRotation,
 
-  // Azure Security Rules
+  // Azure Security & CIS Benchmark Rules
   azureBlobPublicAccess,
+  azureStorageHttpsOnly,
+  azureStorageMinTls,
+  azureStoragePublicNetwork,
+  azureStorageCmek,
   azureNsgOpenSSH,
+  azureNsgOpenRDP,
+  azureNsgAllOpen,
+  azureVmPublicIp,
+  azureDiskCmek,
   azureEntraMfa,
+  azureKeyVaultPurgeProtection,
+  azureKeyVaultPublicNetwork,
+  azureSqlPublicNetwork,
+  azureSqlTdeDisabled,
+  azureActivityLogAlert,
 ];
 
 /**
- * Audit resources against the registered security rules
+ * Audit resources against the registered security rules with full state lifecycle (Active vs Resolved)
  * @param {Array} resources List of Mongoose Resource documents to audit
- * @returns {Promise<Object>} Object containing counts of active findings found by severity
+ * @returns {Promise<Object>} Object containing counts of active & resolved findings found by severity
  */
 const evaluateRules = async (resources) => {
-  console.log(`[Rules Engine] Evaluating ${resources.length} resource(s) against ${rulesRegistry.length} policy rule(s)...`);
-  
-  // Clean previous findings for the specific resources being evaluated
-  const resourceIds = resources.map((r) => r._id);
-  await Finding.deleteMany({ resourceId: { $in: resourceIds } });
+  if (!resources || !Array.isArray(resources)) {
+    resources = await Resource.find({ status: { $ne: 'deleted' } });
+  }
 
-  const counts = { critical: 0, high: 0, medium: 0, low: 0, informational: 0 };
+  console.log(`[Rules Engine] SECURITY RULES EXECUTED: ${rulesRegistry.length} policy rules against ${resources.length} live resource(s)...`);
+
+  const counts = { critical: 0, high: 0, medium: 0, low: 0, informational: 0, activeCount: 0, resolvedCount: 0 };
+  const evaluatedResourceIds = resources.map(r => r._id);
 
   for (const res of resources) {
+    // Fetch existing findings for this resource
+    const existingFindings = await Finding.find({ resourceId: res._id });
+    const existingFindingMap = new Map(existingFindings.map(f => [f.title, f]));
+
     for (const rule of rulesRegistry) {
       try {
         const isViolated = rule.check(res);
-        if (isViolated) {
-          console.log(`[Rules Engine] 🚨 Finding Raised: '${rule.title}' on resource: ${res.arn}`);
-          
-          await Finding.create({
-            title: rule.title,
-            description: rule.description,
-            severity: rule.severity,
-            resourceId: res._id,
-            resourceArn: res.arn,
-            recommendation: rule.recommendation || rule.remediation || '',
-            complianceMapping: rule.complianceMapping,
-            docLink: rule.docLink,
-            status: 'Active',
-          });
+        const existing = existingFindingMap.get(rule.title);
 
-          // Increment count based on severity weight
+        if (isViolated) {
+          if (existing) {
+            // Update timestamp on existing active finding
+            existing.status = 'Active';
+            existing.lastDetectedAt = new Date();
+            await existing.save();
+            console.log(`[Rules Engine] ⚠️  Existing Finding Maintained: '${rule.title}' on ${res.name}`);
+          } else {
+            // Create new active finding
+            await Finding.create({
+              title: rule.title,
+              description: rule.description,
+              severity: rule.severity,
+              resourceId: res._id,
+              resourceArn: res.arn,
+              recommendation: rule.recommendation || rule.remediation || '',
+              complianceMapping: rule.complianceMapping,
+              docLink: rule.docLink,
+              status: 'Active',
+              firstDetectedAt: new Date(),
+              lastDetectedAt: new Date()
+            });
+            console.log(`[Rules Engine] 🚨 New Finding Raised: '${rule.title}' on ${res.name}`);
+          }
+
+          counts.activeCount++;
           const sevKey = rule.severity.toLowerCase();
           if (counts[sevKey] !== undefined) {
             counts[sevKey]++;
+          }
+        } else {
+          // Rule is compliant: resolve any existing active finding for this rule on this resource
+          if (existing && existing.status === 'Active') {
+            existing.status = 'Resolved';
+            existing.lastDetectedAt = new Date();
+            await existing.save();
+            counts.resolvedCount++;
+            console.log(`[Rules Engine] ✅ Finding Resolved: '${rule.title}' on ${res.name}`);
           }
         }
       } catch (err) {
@@ -124,7 +177,29 @@ const evaluateRules = async (resources) => {
     }
   }
 
-  console.log(`[Rules Engine] Audit completed. Total findings raised: ${counts.critical + counts.high + counts.medium + counts.low}`);
+  // Resolve findings ONLY for decommissioned resources of the specific provider(s) being evaluated
+  const evaluatedProviders = [...new Set(resources.map(r => r.cloudProvider))];
+  if (evaluatedProviders.length > 0) {
+    const staleResources = await Resource.find({
+      cloudProvider: { $in: evaluatedProviders },
+      _id: { $nin: evaluatedResourceIds }
+    });
+    const staleIds = staleResources.map(r => r._id);
+
+    const orphanedFindings = await Finding.find({
+      resourceId: { $in: staleIds },
+      status: 'Active'
+    });
+    for (const orphan of orphanedFindings) {
+      orphan.status = 'Resolved';
+      orphan.lastDetectedAt = new Date();
+      await orphan.save();
+      counts.resolvedCount++;
+      console.log(`[Rules Engine] ✅ Finding Resolved (Resource Decommissioned/Cleaned): '${orphan.title}' on ARN: ${orphan.resourceArn}`);
+    }
+  }
+
+  console.log(`[Rules Engine] Audit completed. FINDINGS DETECTED: ${counts.activeCount} Active | FINDINGS RESOLVED: ${counts.resolvedCount} Resolved.`);
   return counts;
 };
 

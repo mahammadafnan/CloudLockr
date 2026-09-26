@@ -1,12 +1,15 @@
 const { STSClient, GetCallerIdentityCommand } = require('@aws-sdk/client-sts');
 const awsConfig = require('../config/aws');
+const gcpConfig = require('../config/gcp');
+const azureConfig = require('../config/azure');
+
 const Scan = require('../models/Scan');
 const Resource = require('../models/Resource');
 const Finding = require('../models/Finding');
 const { evaluateRules } = require('../rules/index');
 const { sendSecurityAlert } = require('./mailer');
 
-// Import individual AWS SDK scanners
+// Import scanners
 const { scanS3 } = require('../scanners/s3Scanner');
 const { scanEC2 } = require('../scanners/ec2Scanner');
 const { scanIAM } = require('../scanners/iamScanner');
@@ -16,125 +19,35 @@ const { scanGCP } = require('../scanners/gcpScanner');
 const { scanAzure } = require('../scanners/azureScanner');
 
 /**
- * Seed fallback database structures if AWS keys are not configured
- * @param {String} accountId Mock Account ID
- * @returns {Promise<Object>} Discovered resources counts and total findings object
- */
-const runMockScanIngestion = async (accountId) => {
-  console.log('[Scan Engine] Running Ingestion Scan...');
-  
-  // Clean findings before running fresh rules evaluation
-  await Finding.deleteMany({});
-
-  // 1. Write/Upsert mock S3 bucket
-  const s3 = await Resource.findOneAndUpdate(
-    { arn: 'arn:aws:s3:::cloudlockr-production-logs' },
-    {
-      name: 'cloudlockr-production-logs',
-      service: 'S3',
-      type: 'Bucket',
-      cloudProvider: 'AWS',
-      accountId,
-      region: 'us-east-1',
-      arn: 'arn:aws:s3:::cloudlockr-production-logs',
-      status: 'public',
-      tags: { Encryption: 'disabled', Compliance: 'PCI-DSS' },
-      creationDate: new Date('2025-01-10T12:00:00Z'),
-    },
-    { upsert: true, new: true }
-  );
-
-  // 2. Write/Upsert mock EC2 Instance
-  const ec2 = await Resource.findOneAndUpdate(
-    { arn: 'arn:aws:ec2:us-east-1:123456789012:instance/i-0c1a2b3c4d5e6f7g8' },
-    {
-      name: 'prod-web-server-01',
-      service: 'EC2',
-      type: 'Instance',
-      cloudProvider: 'AWS',
-      accountId,
-      region: 'us-east-1',
-      arn: 'arn:aws:ec2:us-east-1:123456789012:instance/i-0c1a2b3c4d5e6f7g8',
-      status: 'running',
-      tags: { InstanceType: 't3.medium', Environment: 'Production' },
-      creationDate: new Date('2025-06-15T08:30:00Z'),
-    },
-    { upsert: true, new: true }
-  );
-
-  // 3. Write/Upsert mock Security Group
-  const sg = await Resource.findOneAndUpdate(
-    { arn: 'arn:aws:ec2:us-east-1:123456789012:security-group/sg-0e99812df' },
-    {
-      name: 'default-ingress-sg',
-      service: 'Security Groups',
-      type: 'SecurityGroup',
-      cloudProvider: 'AWS',
-      accountId,
-      region: 'us-east-1',
-      arn: 'arn:aws:ec2:us-east-1:123456789012:security-group/sg-0e99812df',
-      status: 'exposed',
-      tags: { OpenSSH: 'true', GroupName: 'default' },
-    },
-    { upsert: true, new: true }
-  );
-
-  // 4. Write/Upsert mock IAM user
-  const iam = await Resource.findOneAndUpdate(
-    { arn: 'arn:aws:iam::123456789012:user/admin-console-user' },
-    {
-      name: 'admin-console-user',
-      service: 'IAM',
-      type: 'User',
-      cloudProvider: 'AWS',
-      accountId,
-      region: 'global',
-      arn: 'arn:aws:iam::123456789012:user/admin-console-user',
-      status: 'active',
-      tags: { ConsoleAccess: 'enabled', MfaActive: 'disabled' },
-    },
-    { upsert: true, new: true }
-  );
-
-  // 5. Write/Upsert mock CloudTrail
-  const ct = await Resource.findOneAndUpdate(
-    { arn: 'arn:aws:cloudtrail:us-east-1:123456789012:trail/organization-audit-trail' },
-    {
-      name: 'organization-audit-trail',
-      service: 'CloudTrail',
-      type: 'Trail',
-      cloudProvider: 'AWS',
-      accountId,
-      region: 'us-east-1',
-      arn: 'arn:aws:cloudtrail:us-east-1:123456789012:trail/organization-audit-trail',
-      status: 'disabled',
-      tags: { LoggingActive: 'false' },
-    },
-    { upsert: true, new: true }
-  );
-
-  const gcpRes = await scanGCP('project-25a7942f-6ee6-4832-a57');
-  const azureRes = await scanAzure('48131ce1-65df-4433-bb54-cb966376f6b6');
-  
-  // Ingest all resources currently in MongoDB (including custom & new storage buckets)
-  const allResources = await Resource.find({});
-  const findingsCount = await evaluateRules(allResources);
-
-  return {
-    scannedCount: allResources.length,
-    findingsCount,
-  };
-};
-
-/**
- * Executes a full security scan, evaluates rules, saves to DB and sends alerts
- * @param {String} triggerType 'Manual' or 'Scheduled'
+ * Executes a full or provider-scoped security scan with real-time state synchronization
+ * 
+ * @param {Object} options Scan options { provider, projectId, triggerType }
  * @returns {Promise<Object>} Completed Scan document
  */
-exports.runProgrammaticScan = async (triggerType = 'Manual') => {
-  console.log(`[Scan Engine] Starting programmatic scan. Trigger: ${triggerType}`);
+exports.runProgrammaticScan = async (options = {}) => {
+  const triggerType = typeof options === 'string' ? options : (options.triggerType || 'Manual');
+  const targetProvider = (options.provider || 'ALL').toUpperCase();
+  const targetGcpProjectId = options.projectId || gcpConfig.projectId;
+  const targetAzureSubscriptionId = azureConfig.subscriptionId;
+
+  console.log(`\n==================================================`);
+  console.log(`SCAN STARTED`);
+  console.log(`Trigger: ${triggerType}`);
+  console.log(`Target Provider: ${targetProvider}`);
+  if (targetProvider === 'GCP' || targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') {
+    if (gcpConfig.isConfigured) {
+      console.log(`GCP Project: ${targetGcpProjectId} (Identity: ${gcpConfig.clientEmail})`);
+    }
+  }
+  if (targetProvider === 'AZURE' || targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') {
+    if (azureConfig.isConfigured) {
+      console.log(`Azure Subscription: ${targetAzureSubscriptionId} (Tenant: ${azureConfig.tenantId})`);
+    }
+  }
+  console.log(`==================================================`);
+
   let currentScan;
-  let accountId = '123456789012'; // Default fallback mock account
+  let accountId = (targetProvider === 'AZURE' ? targetAzureSubscriptionId : targetGcpProjectId) || '123456789012';
 
   try {
     // 1. Initialize Scan log status in MongoDB
@@ -142,145 +55,166 @@ exports.runProgrammaticScan = async (triggerType = 'Manual') => {
       accountId,
       triggerType,
       status: 'In-Progress',
+      startedAt: new Date()
     });
 
-    const isAwsConfigured =
-      process.env.AWS_ACCESS_KEY_ID &&
-      process.env.AWS_SECRET_ACCESS_KEY;
+    let liveScannedResources = [];
+    let scanHasError = false;
+    let scanErrorMessage = '';
 
-    if (!isAwsConfigured) {
-      // 2a. Run in Mock mode
-      const result = await runMockScanIngestion(accountId);
-      
-      const totalFindings =
-        result.findingsCount.critical +
-        result.findingsCount.high +
-        result.findingsCount.medium +
-        result.findingsCount.low;
+    // 2. Execute GCP Scanning if targeted
+    if (targetProvider === 'GCP' || targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') {
+      if (gcpConfig.isConfigured) {
+        console.log(`[Scan Engine] Initiating live GCP API requests...`);
+        try {
+          const gcpResult = await scanGCP(targetGcpProjectId);
+          const gcpRes = (gcpResult && gcpResult.resources) ? gcpResult.resources : [];
+          liveScannedResources = liveScannedResources.concat(gcpRes);
 
-      const deductions =
-        result.findingsCount.critical * 20 +
-        result.findingsCount.high * 10 +
-        result.findingsCount.medium * 5 +
-        result.findingsCount.low * 2;
+          // Synchronize MongoDB ONLY if GCP API succeeded: remove stale GCP resources no longer existing in GCP
+          const currentArns = gcpRes.map(r => r.arn);
+          const staleGcpResources = await Resource.find({
+            cloudProvider: 'GCP',
+            accountId: targetGcpProjectId,
+            arn: { $nin: currentArns }
+          });
 
-      const score = Math.max(0, 100 - deductions);
+          if (staleGcpResources.length > 0) {
+            const staleIds = staleGcpResources.map(r => r._id);
+            await Finding.updateMany({ resourceId: { $in: staleIds } }, { status: 'Resolved', lastDetectedAt: new Date() });
+            await Resource.deleteMany({ _id: { $in: staleIds } });
+            console.log(`[Scan Engine] Removed ${staleGcpResources.length} decommissioned/fixed GCP resource(s) from DB.`);
+          }
+        } catch (err) {
+          scanHasError = true;
+          scanErrorMessage = `GCP Scan Failed: ${err.message}`;
+          console.error('[Scan Engine] GCP Ingestion failed:', err.message);
+        }
+      } else {
+        console.warn('[Scan Engine] GCP is not configured. Skipping GCP scan.');
+      }
+    }
 
-      currentScan.status = 'Completed';
-      currentScan.resourcesScanned = result.scannedCount;
-      currentScan.findingsFound = result.findingsCount;
-      currentScan.totalFindings = totalFindings;
-      currentScan.securityScore = score;
+    // 3. Execute AWS Scanning if targeted
+    if (targetProvider === 'AWS' || targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') {
+      const isAwsConfigured = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+      if (isAwsConfigured) {
+        try {
+          const stsClient = new STSClient(awsConfig);
+          const callerIdentity = await stsClient.send(new GetCallerIdentityCommand({}));
+          accountId = callerIdentity.Account;
+
+          const s3Res = await scanS3(awsConfig, accountId);
+          const ec2Res = await scanEC2(awsConfig, accountId);
+          const iamRes = await scanIAM(awsConfig, accountId);
+          const sgRes = await scanSecurityGroups(awsConfig, accountId);
+          const ctRes = await scanCloudTrail(awsConfig, accountId);
+
+          liveScannedResources = liveScannedResources.concat(s3Res, ec2Res, iamRes, sgRes, ctRes);
+        } catch (awsErr) {
+          console.error('[Scan Engine] AWS Ingestion failed:', awsErr.message);
+        }
+      }
+    }
+
+    // 4. Execute Azure Scanning if targeted
+    if (targetProvider === 'AZURE' || targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') {
+      if (azureConfig.isConfigured) {
+        console.log(`[Scan Engine] Initiating live Azure ARM API requests for Subscription ${targetAzureSubscriptionId}...`);
+        try {
+          const azureResult = await scanAzure(targetAzureSubscriptionId);
+          const azureRes = (azureResult && azureResult.resources) ? azureResult.resources : [];
+          liveScannedResources = liveScannedResources.concat(azureRes);
+
+          // Synchronize MongoDB: remove stale Azure resources no longer existing in subscription
+          const currentAzureArns = azureRes.map(r => r.arn);
+          const staleAzureResources = await Resource.find({
+            cloudProvider: 'AZURE',
+            accountId: targetAzureSubscriptionId,
+            arn: { $nin: currentAzureArns }
+          });
+
+          if (staleAzureResources.length > 0) {
+            const staleIds = staleAzureResources.map(r => r._id);
+            await Finding.updateMany({ resourceId: { $in: staleIds } }, { status: 'Resolved', lastDetectedAt: new Date() });
+            await Resource.deleteMany({ _id: { $in: staleIds } });
+            console.log(`[Scan Engine] Removed ${staleAzureResources.length} decommissioned/fixed Azure resource(s) from DB.`);
+          }
+        } catch (azErr) {
+          scanHasError = true;
+          scanErrorMessage = `Azure Scan Failed: ${azErr.message}`;
+          console.error('[Scan Engine] Azure Ingestion failed:', azErr.message);
+        }
+      } else {
+        console.warn('[Scan Engine] Azure is not configured. Skipping Azure scan.');
+      }
+    }
+
+    // If target scan failed completely, do not mark as clean
+    if (scanHasError && liveScannedResources.length === 0) {
+      currentScan.status = 'Failed';
+      currentScan.error = scanErrorMessage;
       currentScan.completedAt = new Date();
       await currentScan.save();
-
-      // Dispatch security email alerts for new findings
-      const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId');
-      await sendSecurityAlert(currentScan, activeFindings);
-
-      return currentScan;
+      throw new Error(scanErrorMessage);
     }
 
-    // 2b. Run in Live Mode
-    console.log('[Scan Engine] Found AWS credentials. Resolving AWS STS Identity...');
-    try {
-      const stsClient = new STSClient(awsConfig);
-      const callerIdentity = await stsClient.send(new GetCallerIdentityCommand({}));
-      accountId = callerIdentity.Account;
-    } catch (stsErr) {
-      console.warn('[Scan Engine] AWS STS Identity resolution failed (Network/DNS):', stsErr.message);
-      accountId = '464433361537'; // Default verified account fallback
-    }
-    
-    // Update Scan log with resolved accountId
-    currentScan.accountId = accountId;
-    await currentScan.save();
+    // 5. Ingest all currently active live resources in MongoDB for the target provider scope
+    const queryFilter = (targetProvider === 'ALL' || targetProvider === 'MULTI-CLOUD') ? {} : { cloudProvider: targetProvider };
+    const allActiveResources = await Resource.find(queryFilter);
 
-    let allResources = [];
+    console.log(`[Scan Engine] DATABASE UPDATED: ${allActiveResources.length} active resource(s) ready for rule evaluation.`);
 
-    // Run each scanner sequentially inside separate try-catch blocks.
-    try {
-      const s3Res = await scanS3(awsConfig, accountId);
-      allResources = allResources.concat(s3Res);
-    } catch (err) {
-      console.error('[Scan Engine] S3 Ingestion failed:', err.message);
-    }
+    // 6. Run security rules engine with active/resolved finding lifecycle
+    const findingsResult = await evaluateRules(allActiveResources);
 
-    try {
-      const ec2Res = await scanEC2(awsConfig, accountId);
-      allResources = allResources.concat(ec2Res);
-    } catch (err) {
-      console.error('[Scan Engine] EC2 Ingestion failed:', err.message);
-    }
-
-    try {
-      const iamRes = await scanIAM(awsConfig, accountId);
-      allResources = allResources.concat(iamRes);
-    } catch (err) {
-      console.error('[Scan Engine] IAM Ingestion failed:', err.message);
-    }
-
-    try {
-      const sgRes = await scanSecurityGroups(awsConfig, accountId);
-      allResources = allResources.concat(sgRes);
-    } catch (err) {
-      console.error('[Scan Engine] SG Ingestion failed:', err.message);
-    }
-
-    try {
-      const ctRes = await scanCloudTrail(awsConfig, accountId);
-      allResources = allResources.concat(ctRes);
-    } catch (err) {
-      console.error('[Scan Engine] CloudTrail Ingestion failed:', err.message);
-    }
-
-    try {
-      const gcpRes = await scanGCP('project-25a7942f-6ee6-4832-a57');
-      allResources = allResources.concat(gcpRes);
-    } catch (err) {
-      console.error('[Scan Engine] GCP Ingestion failed:', err.message);
-    }
-
-    try {
-      const azureRes = await scanAzure('48131ce1-65df-4433-bb54-cb966376f6b6');
-      allResources = allResources.concat(azureRes);
-    } catch (err) {
-      console.error('[Scan Engine] Azure Ingestion failed:', err.message);
-    }
-
-    // Run rules engine against newly saved live resources
-    const findingsCount = await evaluateRules(allResources);
-    
     const totalFindings =
-      findingsCount.critical +
-      findingsCount.high +
-      findingsCount.medium +
-      findingsCount.low;
+      findingsResult.critical +
+      findingsResult.high +
+      findingsResult.medium +
+      findingsResult.low;
 
     const deductions =
-      findingsCount.critical * 20 +
-      findingsCount.high * 10 +
-      findingsCount.medium * 5 +
-      findingsCount.low * 2;
+      findingsResult.critical * 20 +
+      findingsResult.high * 10 +
+      findingsResult.medium * 5 +
+      findingsResult.low * 2;
 
     const score = Math.max(0, 100 - deductions);
 
-    // Save final scan state
-    currentScan.status = 'Completed';
-    currentScan.resourcesScanned = allResources.length;
-    currentScan.findingsFound = findingsCount;
+    // Save completed scan record
+    currentScan.status = scanHasError ? 'Partial-Failure' : 'Completed';
+    if (scanHasError) currentScan.error = scanErrorMessage;
+    currentScan.resourcesScanned = allActiveResources.length;
+    currentScan.findingsFound = {
+      critical: findingsResult.critical,
+      high: findingsResult.high,
+      medium: findingsResult.medium,
+      low: findingsResult.low,
+      informational: findingsResult.informational || 0
+    };
     currentScan.totalFindings = totalFindings;
     currentScan.securityScore = score;
     currentScan.completedAt = new Date();
     await currentScan.save();
 
-    // Dispatch security email alerts for new findings
-    const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId');
-    await sendSecurityAlert(currentScan, activeFindings);
+    console.log(`\n==================================================`);
+    console.log(`FINDINGS DETECTED: ${totalFindings} Active`);
+    console.log(`FINDINGS RESOLVED: ${findingsResult.resolvedCount || 0} Resolved`);
+    console.log(`SCAN COMPLETED (Status: ${currentScan.status})`);
+    console.log(`==================================================\n`);
+
+    // Dispatch security alerts if active findings exist
+    try {
+      const activeFindings = await Finding.find({ status: 'Active' }).populate('resourceId');
+      await sendSecurityAlert(currentScan, activeFindings);
+    } catch (mailErr) {
+      console.warn('[Scan Engine] Mailer alert skipped:', mailErr.message);
+    }
 
     return currentScan;
   } catch (error) {
-    console.error('[Scan Engine] Background scan failed:', error.message);
+    console.error('[Scan Engine] Scan failed:', error.message);
     if (currentScan) {
       currentScan.status = 'Failed';
       currentScan.error = error.message;

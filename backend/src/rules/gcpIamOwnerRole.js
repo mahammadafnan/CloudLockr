@@ -20,11 +20,7 @@ module.exports = {
     }
     const tags = resource.tags || {};
     const role = typeof tags.get === 'function' ? tags.get('Role') : tags.Role;
-    const keyAge = typeof tags.get === 'function' ? tags.get('KeyAgeDays') : tags.KeyAgeDays;
 
-    const hasAdminRole = role === 'roles/owner' || role === 'roles/editor';
-    const isOldKey = parseInt(keyAge || '0', 10) > 90;
-
-    return hasAdminRole || isOldKey;
+    return role === 'roles/owner' || role === 'roles/editor';
   }
 };
