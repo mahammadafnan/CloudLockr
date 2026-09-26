@@ -23,7 +23,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     navigate('/login');
   };
 
-  const mainLinks = [
+  const isViewer = user?.role?.toLowerCase() === 'viewer';
+
+  const allMainLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <HiOutlineViewGrid size={18} /> },
     { name: 'Security Findings', path: '/findings', icon: <HiOutlineShieldExclamation size={18} /> },
     { name: 'Reports', path: '/reports', icon: <HiOutlineDocumentReport size={18} /> },
@@ -31,6 +33,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { name: 'Cloud Accounts', path: '/accounts', icon: <HiOutlineCloud size={18} /> },
     { name: 'Resource Findings', path: '/resources', icon: <HiOutlineCube size={18} /> },
   ];
+
+  const mainLinks = allMainLinks.filter(link => {
+    if (isViewer && link.name === 'Reports') return false;
+    return true;
+  });
 
   return (
     <aside
@@ -87,24 +94,26 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       {/* Flex Spacer to push Settings and User Account to the absolute bottom */}
       <div className="flex-grow"></div>
 
-      {/* Settings Link (rendered at the bottom above the profile) */}
-      <div className="px-3 pb-4">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
-              isActive
-                ? 'bg-[#121c13] border border-[#1e3a22] text-white'
-                : 'text-gray-400 hover:text-white hover:bg-[#121612]/50'
-            }`
-          }
-        >
-          <div className="flex items-center gap-3">
-            <HiOutlineAdjustments size={18} className="shrink-0" />
-            {isOpen && <span>Settings</span>}
-          </div>
-        </NavLink>
-      </div>
+      {/* Settings Link (rendered at the bottom above the profile - hidden for Viewer) */}
+      {!isViewer && (
+        <div className="px-3 pb-4">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                isActive
+                  ? 'bg-[#121c13] border border-[#1e3a22] text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-[#121612]/50'
+              }`
+            }
+          >
+            <div className="flex items-center gap-3">
+              <HiOutlineAdjustments size={18} className="shrink-0" />
+              {isOpen && <span>Settings</span>}
+            </div>
+          </NavLink>
+        </div>
+      )}
 
       {/* User profile footer */}
       <div className="p-4 border-t border-[#161d18] bg-[#0a0c0a] flex flex-col gap-3">

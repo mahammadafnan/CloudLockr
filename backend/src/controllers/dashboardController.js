@@ -50,6 +50,29 @@ exports.getDashboardStats = async (req, res, next) => {
       });
     }
 
+    // 3.5 Calculate real cloud exposure (Open misconfigurations distribution across AWS, GCP, Azure)
+    let awsOpen = 0;
+    let gcpOpen = 0;
+    let azureOpen = 0;
+
+    activeFindings.forEach(f => {
+      const prov = (
+        f.resourceId?.cloudProvider ||
+        (f.resourceArn?.includes('gcp') ? 'GCP' : f.resourceArn?.includes('azure') || f.resourceArn?.includes('/subscriptions/') ? 'AZURE' : 'AWS')
+      ).toUpperCase();
+
+      if (prov === 'GCP') gcpOpen++;
+      else if (prov === 'AZURE') azureOpen++;
+      else awsOpen++;
+    });
+
+    const cloudExposure = {
+      aws: awsOpen,
+      gcp: gcpOpen,
+      azure: azureOpen,
+      total: awsOpen + gcpOpen + azureOpen
+    };
+
     const cloudAccounts = [...new Set(scopedResources.map(r => r.accountId))].filter(Boolean);
     const cloudAccountsCount = cloudAccounts.length || (isFiltered ? 1 : 3);
 
@@ -77,8 +100,10 @@ exports.getDashboardStats = async (req, res, next) => {
         complianceRate: postureMetrics.complianceRate,
         lastScanTime: latestScan ? latestScan.completedAt : null,
         findingsCount: postureMetrics.findingsCount,
-        byProvider
+        byProvider,
+        cloudExposure
       },
+      cloudExposure,
       recentFindings,
       recentScans,
     });

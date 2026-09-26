@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import { useCloud } from '../context/CloudContext';
 import { 
   HiOutlineSearch, 
@@ -11,6 +12,8 @@ import {
 } from 'react-icons/hi';
 
 const SecurityFindings = () => {
+  const { user } = useAuth();
+  const isViewer = user?.role?.toLowerCase() === 'viewer';
   const [loading, setLoading] = useState(true);
   const [findings, setFindings] = useState([]);
   const [search, setSearch] = useState('');
@@ -314,8 +317,12 @@ const SecurityFindings = () => {
             return (
               <div
                 key={finding._id}
-                onClick={() => handleFindingSelect(finding)}
-                className={`p-6 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[1.5rem] flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${leftBorder}`}
+                onClick={() => {
+                  if (!isViewer) handleFindingSelect(finding);
+                }}
+                className={`p-6 bg-[#e8fce0]/45 border border-[#c3f4b0]/70 rounded-[1.5rem] flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 ${
+                  isViewer ? 'cursor-default' : 'cursor-pointer hover:shadow-md hover:-translate-y-0.5'
+                } transition-all duration-200 ${leftBorder}`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2.5">
@@ -337,10 +344,12 @@ const SecurityFindings = () => {
                   <span className="text-[10px] font-mono text-gray-500 uppercase px-2.5 py-0.5 bg-[#f6f8f6] border border-[#e6e8eb] rounded-lg font-bold">
                     {finding.resourceId?.service || 'Cloud Asset'}
                   </span>
-                  <span className="text-xs font-bold text-black underline underline-offset-2 flex items-center space-x-1.5 mt-1 hover:text-gray-700 transition">
-                    <HiOutlineSparkles className="h-4 w-4 text-[#39ff14]" />
-                    <span>Explain Fix</span>
-                  </span>
+                  {!isViewer && (
+                    <span className="text-xs font-bold text-black underline underline-offset-2 flex items-center space-x-1.5 mt-1 hover:text-gray-700 transition">
+                      <HiOutlineSparkles className="h-4 w-4 text-[#39ff14]" />
+                      <span>Explain Fix</span>
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -348,8 +357,8 @@ const SecurityFindings = () => {
         </div>
       )}
 
-      {/* SLIDING DRAWER AI ASSISTANT PANEL */}
-      {selectedFinding && (
+      {/* SLIDING DRAWER AI ASSISTANT PANEL (Admin & Security Analyst only) */}
+      {selectedFinding && !isViewer && (
         <div className="fixed inset-0 z-50 overflow-hidden bg-black/10 backdrop-blur-sm">
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">

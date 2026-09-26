@@ -49,8 +49,8 @@ function calculateSecurityPosture({ resources = [], findings = [], provider = 'A
   const providerUpper = (provider || 'ALL').toUpperCase();
   const benchmarkRulesCount = providerUpper === 'GCP' ? 20
     : providerUpper === 'AZURE' ? 16
-    : providerUpper === 'AWS' ? 9
-    : 45;
+    : providerUpper === 'AWS' ? 10
+    : 46;
 
   if (totalResources === 0) {
     return {

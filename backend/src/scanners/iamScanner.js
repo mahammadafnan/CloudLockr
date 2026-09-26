@@ -5,6 +5,8 @@ const {
   ListMFADevicesCommand,
   GetLoginProfileCommand,
   GetAccountPasswordPolicyCommand,
+  ListAttachedUserPoliciesCommand,
+  ListUserPoliciesCommand,
 } = require('@aws-sdk/client-iam');
 const Resource = require('../models/Resource');
 
@@ -76,12 +78,46 @@ const scanIAM = async (awsConfig, accountId) => {
         console.error(`[IAM Scanner] Error auditing access keys for user ${userName}:`, err.message);
       }
 
+      // 4. Audit Attached and Inline Policies for AdministratorAccess (IAM-001)
+      let attachedPolicyNames = [];
+      let hasAdminAccess = false;
+      try {
+        const polRes = await iamClient.send(new ListAttachedUserPoliciesCommand({ UserName: userName }));
+        const attached = polRes.AttachedPolicies || [];
+        attached.forEach((p) => {
+          if (p.PolicyName) attachedPolicyNames.push(p.PolicyName);
+          if (
+            p.PolicyName === 'AdministratorAccess' ||
+            p.PolicyArn === 'arn:aws:iam::aws:policy/AdministratorAccess'
+          ) {
+            hasAdminAccess = true;
+          }
+        });
+      } catch (err) {
+        console.error(`[IAM Scanner] Error auditing attached policies for user ${userName}:`, err.message);
+      }
+
+      try {
+        const inlineRes = await iamClient.send(new ListUserPoliciesCommand({ UserName: userName }));
+        const inlineNames = inlineRes.PolicyNames || [];
+        inlineNames.forEach((name) => {
+          attachedPolicyNames.push(name);
+          if (name.toLowerCase().includes('admin')) {
+            hasAdminAccess = true;
+          }
+        });
+      } catch (err) {
+        // Non-blocking for inline policies
+      }
+
       // Map dynamic properties to tags object
       const tags = {
         ConsoleAccess: hasConsoleLogin ? 'enabled' : 'disabled',
         MfaActive: hasMfa ? 'enabled' : 'disabled',
         AccessKeysCompliant: keysRotated ? 'true' : 'false',
         PasswordLastUsed: user.PasswordLastUsed ? user.PasswordLastUsed.toISOString() : 'Never',
+        HasAdministratorAccess: hasAdminAccess ? 'true' : 'false',
+        AttachedPolicies: attachedPolicyNames.join(','),
       };
 
       const resourceData = {

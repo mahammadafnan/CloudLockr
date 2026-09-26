@@ -10,6 +10,7 @@ const ebsVolumeEncryption = require('./ebsVolumeEncryption');
 const iamMfaConsole = require('./iamMfaConsole');
 const iamKeyAge90Days = require('./iamKeyAge90Days');
 const iamPasswordPolicy = require('./iamPasswordPolicy');
+const iamUserAdminAccess = require('./iamUserAdminAccess');
 const cloudTrailLoggingEnabled = require('./cloudTrailLoggingEnabled');
 
 // Load Comprehensive GCP Rule Engine
@@ -63,6 +64,7 @@ const rulesRegistry = [
   iamMfaConsole,
   iamKeyAge90Days,
   iamPasswordPolicy,
+  iamUserAdminAccess,
   cloudTrailLoggingEnabled,
 
   // GCP Security & CIS Benchmark Rules
