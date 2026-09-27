@@ -52,6 +52,8 @@ const scanSecurityGroups = async (awsConfig, accountId) => {
         OpenRDP: isOpenRDP ? 'true' : 'false',
         VpcId: sg.VpcId || 'default',
         GroupName: sg.GroupName || 'unknown',
+        SecurityGroupId: groupId,
+        InboundRules: JSON.stringify(sg.IpPermissions || []),
       };
 
       const resourceData = {

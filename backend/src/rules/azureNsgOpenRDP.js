@@ -7,7 +7,8 @@ module.exports = {
   service: 'NSG',
   severity: 'Critical',
   description: 'Azure Network Security Group allows inbound Remote Desktop Protocol (RDP Port 3389) from any internet source (*), exposing virtual machines to automated brute-force and remote compromise.',
-  remediation: 'In Azure Portal ➔ Network Security Groups ➔ Inbound Security Rules, edit the RDP rule to restrict the source address to specific authorized corporate CIDR IP ranges or delete the rule.',
+  remediation: 'In Azure Portal ➔ Network Security Groups ➔ Select NSG ➔ Settings ➔ Inbound security rules. Edit the RDP rule and change Source from Any/* to IP Addresses with authorized CIDR, or set Action to Deny.',
+  recommendation: 'In Azure Portal ➔ Network Security Groups ➔ Select NSG ➔ Settings ➔ Inbound security rules. Edit the RDP rule and change Source from Any/* to IP Addresses with authorized CIDR, or set Action to Deny.',
   complianceMapping: {
     cisAzure: '6.2',
     nist: 'PR.AC-5'

@@ -7,7 +7,8 @@ module.exports = {
   service: 'NSG',
   severity: 'Critical',
   description: 'Azure NSG Inbound Security Rule permits SSH traffic on Port 22 from any source IP (*), exposing Azure VMs to unauthorized remote access and brute-force attacks.',
-  recommendation: 'Navigate to Azure Portal ➔ Network Security Groups ➔ Inbound Security Rules. Edit the SSH rule and restrict Source IP to specific corporate CIDR prefixes.',
+  remediation: 'In Azure Portal ➔ Network Security Groups ➔ Select NSG ➔ Settings ➔ Inbound security rules. Edit the rule and change Source from Any/* to IP Addresses with authorized CIDR, or set Action to Deny.',
+  recommendation: 'In Azure Portal ➔ Network Security Groups ➔ Select NSG ➔ Settings ➔ Inbound security rules. Edit the rule and change Source from Any/* to IP Addresses with authorized CIDR, or set Action to Deny.',
   complianceMapping: {
     cisAzure: '6.1',
     nist: 'PR.AC-5'

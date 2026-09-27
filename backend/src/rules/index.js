@@ -4,7 +4,7 @@ const Resource = require('../models/Resource');
 // Load AWS rules
 const s3PublicBlock = require('./s3PublicBlock');
 const s3Encryption = require('./s3Encryption');
-const ec2Port22Ingress = require('./ec2Port22Ingress');
+const ec2SgSshOpenToWorld = require('./ec2SgSshOpenToWorld');
 const ec2Port3389Ingress = require('./ec2Port3389Ingress');
 const ebsVolumeEncryption = require('./ebsVolumeEncryption');
 const iamMfaConsole = require('./iamMfaConsole');
@@ -58,7 +58,7 @@ const rulesRegistry = [
   // AWS Security Rules
   s3PublicBlock,
   s3Encryption,
-  ec2Port22Ingress,
+  ec2SgSshOpenToWorld,
   ec2Port3389Ingress,
   ebsVolumeEncryption,
   iamMfaConsole,
@@ -131,11 +131,15 @@ const evaluateRules = async (resources) => {
     for (const rule of rulesRegistry) {
       try {
         const isViolated = rule.check(res);
-        const existing = existingFindingMap.get(rule.title);
+        const existing = existingFindingMap.get(rule.title) ||
+          (rule.id === 'EC2_SG_SSH_OPEN_TO_WORLD' ? existingFindingMap.get('Security Group SSH Port 22 Open to Public') : null);
 
         if (isViolated) {
           if (existing) {
-            // Update timestamp on existing active finding
+            // Update timestamp and synchronize title/severity on existing active finding
+            existing.title = rule.title;
+            existing.severity = rule.severity;
+            existing.recommendation = rule.recommendation || rule.remediation || '';
             existing.status = 'Active';
             existing.lastDetectedAt = new Date();
             await existing.save();

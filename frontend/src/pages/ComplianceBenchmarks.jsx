@@ -54,7 +54,7 @@ const ComplianceBenchmarks = () => {
         { id: '2.1.1', cloud: 'AWS', section: 'S3 Storage', title: 'S3 Public Bucket Access Detected', ruleRef: 's3-public-block', severity: 'Critical' },
         { id: '2.1.2', cloud: 'AWS', section: 'S3 Storage', title: 'S3 Default Bucket Encryption Disabled', ruleRef: 's3-encryption', severity: 'High' },
         { id: '2.2.1', cloud: 'AWS', section: 'EBS Storage', title: 'EBS Volume Encryption Disabled', ruleRef: 'ebs-volume-encryption', severity: 'High' },
-        { id: '4.1', cloud: 'AWS', section: 'Security Groups', title: 'Security Group SSH Port 22 Open to Public', ruleRef: 'ec2-port22-ingress', severity: 'Critical' },
+        { id: '4.1', cloud: 'AWS', section: 'Security Groups', title: 'SSH port 22 is open to the internet', ruleRef: 'EC2_SG_SSH_OPEN_TO_WORLD', severity: 'High' },
         { id: '4.2', cloud: 'AWS', section: 'Security Groups', title: 'Security Group RDP Port 3389 Open to Public', ruleRef: 'ec2-port3389-ingress', severity: 'Critical' }
       ]
     },

@@ -7,7 +7,8 @@ module.exports = {
   service: 'VirtualMachine',
   severity: 'High',
   description: 'The Azure Virtual Machine has a Public IP address directly bound to its network interface, exposing the host directly to internet reconnaissance and threats rather than fronting it with Azure Bastion or Application Gateway.',
-  remediation: 'In Azure Portal ➔ Virtual Machines ➔ Select VM ➔ Networking, dissociate the Public IP from the Network Interface and route traffic via Azure Bastion or Load Balancer.',
+  remediation: 'In Azure Portal ➔ Virtual Machines ➔ Select VM ➔ Network settings ➔ click the Network Interface link ➔ under Settings click IP configurations ➔ click ipconfig1 ➔ set Public IP address to Disassociate (None).',
+  recommendation: 'In Azure Portal ➔ Virtual Machines ➔ Select VM ➔ Network settings ➔ click the Network Interface link ➔ under Settings click IP configurations ➔ click ipconfig1 ➔ set Public IP address to Disassociate (None).',
   complianceMapping: {
     cisAzure: '6.4',
     nist: 'SC-7'

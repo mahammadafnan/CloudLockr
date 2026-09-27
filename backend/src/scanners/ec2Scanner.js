@@ -37,6 +37,8 @@ const scanEC2 = async (awsConfig, accountId) => {
         // Add extra metadata to tags for rule evaluations later
         tags['InstanceType'] = instance.InstanceType || 'unknown';
         tags['AmiId'] = instance.ImageId || 'unknown';
+        tags['PublicIpAddress'] = instance.PublicIpAddress || '';
+        tags['SecurityGroups'] = JSON.stringify((instance.SecurityGroups || []).map(g => ({ GroupId: g.GroupId, GroupName: g.GroupName })));
         
         const resourceData = {
           name: tags['Name'] || instanceId,
