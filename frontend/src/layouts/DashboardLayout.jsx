@@ -8,7 +8,7 @@ const DashboardLayout = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <div className="min-h-screen w-full flex overflow-hidden bg-[#0c0e0c] select-none font-sans">
+    <div className="h-screen w-full flex overflow-hidden bg-[#0c0e0c] select-none font-sans">
       {/* Sidebar on the left */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       

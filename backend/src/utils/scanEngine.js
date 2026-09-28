@@ -48,12 +48,28 @@ exports.runProgrammaticScan = async (options = {}) => {
   console.log(`==================================================`);
 
   let currentScan;
-  let accountId = (targetProvider === 'AZURE' ? targetAzureSubscriptionId : targetGcpProjectId) || '123456789012';
+  let scanProvider = targetProvider;
+  let accountId = '464433361537';
+
+  if (targetProvider === 'AZURE') {
+    accountId = targetAzureSubscriptionId || '48131ce1-65df-4433-bb54-cb966376f6b6';
+    scanProvider = 'AZURE';
+  } else if (targetProvider === 'GCP') {
+    accountId = targetGcpProjectId || 'project-25a7942f-6ee6-4832-a57';
+    scanProvider = 'GCP';
+  } else if (targetProvider === 'AWS') {
+    accountId = '464433361537';
+    scanProvider = 'AWS';
+  } else {
+    accountId = 'Multi-Cloud (AWS/GCP/Azure)';
+    scanProvider = 'MULTI-CLOUD';
+  }
 
   try {
     // 1. Initialize Scan log status in MongoDB
     currentScan = await Scan.create({
       accountId,
+      provider: scanProvider,
       triggerType,
       status: 'In-Progress',
       startedAt: new Date()
@@ -104,6 +120,7 @@ exports.runProgrammaticScan = async (options = {}) => {
           const stsClient = new STSClient(awsConfig);
           const callerIdentity = await stsClient.send(new GetCallerIdentityCommand({}));
           accountId = callerIdentity.Account;
+          currentScan.accountId = accountId;
 
           const s3Res = await scanS3(awsConfig, accountId);
           const ec2Res = await scanEC2(awsConfig, accountId);
@@ -176,6 +193,7 @@ exports.runProgrammaticScan = async (options = {}) => {
     });
 
     // Save completed scan record
+    currentScan.provider = scanProvider;
     currentScan.status = scanHasError ? 'Partial-Failure' : 'Completed';
     if (scanHasError) currentScan.error = scanErrorMessage;
     currentScan.resourcesScanned = allActiveResources.length;

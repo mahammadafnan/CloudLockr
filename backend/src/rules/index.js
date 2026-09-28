@@ -132,7 +132,8 @@ const evaluateRules = async (resources) => {
       try {
         const isViolated = rule.check(res);
         const existing = existingFindingMap.get(rule.title) ||
-          (rule.id === 'EC2_SG_SSH_OPEN_TO_WORLD' ? existingFindingMap.get('Security Group SSH Port 22 Open to Public') : null);
+          (rule.id === 'EC2_SG_SSH_OPEN_TO_WORLD' ? existingFindingMap.get('Security Group SSH Port 22 Open to Public') : null) ||
+          (rule.id === 'AWS-EC2-001' ? existingFindingMap.get('EBS Volume Encryption Disabled') : null);
 
         if (isViolated) {
           if (existing) {
@@ -168,13 +169,14 @@ const evaluateRules = async (resources) => {
             counts[sevKey]++;
           }
         } else {
-          // Rule is compliant: resolve any existing active finding for this rule on this resource
-          if (existing && existing.status === 'Active') {
+          // Rule is compliant: resolve any existing finding (Active or Pending Verification)
+          if (existing && (existing.status === 'Active' || existing.status === 'Pending Verification')) {
+            const wasPending = existing.status === 'Pending Verification';
             existing.status = 'Resolved';
             existing.lastDetectedAt = new Date();
             await existing.save();
             counts.resolvedCount++;
-            console.log(`[Rules Engine] ✅ Finding Resolved: '${rule.title}' on ${res.name}`);
+            console.log(`[Rules Engine] ✅ ${wasPending ? 'Verification Confirmed & ' : ''}Finding Resolved: '${rule.title}' on ${res.name}`);
           }
         }
       } catch (err) {

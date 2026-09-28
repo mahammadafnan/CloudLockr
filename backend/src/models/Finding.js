@@ -39,8 +39,14 @@ const FindingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'Resolved', 'Suppressed'],
+    enum: ['Active', 'Resolved', 'Suppressed', 'Pending Verification'],
     default: 'Active',
+  },
+  remediationDetails: {
+    dispatchedAt: { type: Date },
+    dispatchedBy: { type: String },
+    command: { type: String },
+    parameters: { type: Map, of: String },
   },
   firstDetectedAt: {
     type: Date,

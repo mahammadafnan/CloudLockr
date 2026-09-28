@@ -5,6 +5,11 @@ const ScanSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Target account ID is required'],
   },
+  provider: {
+    type: String,
+    enum: ['AWS', 'GCP', 'AZURE', 'ALL', 'MULTI-CLOUD'],
+    default: 'AWS',
+  },
   status: {
     type: String,
     enum: ['In-Progress', 'Completed', 'Failed'],

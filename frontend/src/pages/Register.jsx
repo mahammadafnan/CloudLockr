@@ -64,13 +64,12 @@ const Register = () => {
 
       {/* Top Bar */}
       <nav className="w-full h-16 flex items-center justify-between px-6 z-10 border-b" style={{ background: '#fff', borderColor: '#E6E8EB' }}>
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8190cPQPuby81kmHIOrMUu1tAe4lm5_B2iYIpuC2GwLxTiBmasA5MmyLp3upLh7_qCXkmzWlJiITzj4psHxO_kyoGRYOxpgqPqiMck01UUclOdoi1cK8c1e2m-i_H7m-GVqpE7q4mtDnKZNxyD5mcUM4Fcv5M4n9XFXe6fpwOhzoUOlkjsDeh4nIW-m9MbIWkadX5ED5RokZHQlsAaSqc09bh3iLvdGGs9h1T9OCXO9_EwuBngrAb1bGMBZVHpycen7c"
-            alt="CloudLockr"
-            className="h-9 w-auto"
+        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img 
+            src="/cloudlockr-logo.png" 
+            alt="CloudLockr" 
+            className="h-[21px] w-auto object-contain" 
           />
-          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.4px', color: '#111' }}>CloudLockr</span>
         </Link>
         <Link to="/" style={{ fontSize: 13, fontWeight: 600, color: '#555' }} className="hover:text-black transition-colors">
           ← Back
@@ -191,10 +190,22 @@ const Register = () => {
       <footer className="w-full z-10" style={{ background: '#fff', borderTop: '1px solid #E6E8EB' }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '48px 24px' }}>
           <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', marginBottom: 32, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Connect all your clouds</p>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 64, flexWrap: 'wrap', opacity: 0.5, filter: 'grayscale(1)' }}>
-            <div style={{ width: 120, height: 48, backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGmwhQt24Q5uh3NZ68MaAo9Id8JEBwv_yG3qJymWfzeZHxi9OKDdBL8Vqg8zSywmO_qmeMggnUfipU-xPFVu863i0tBRCzVX5pXCaRwehvEzDA5H8Xv-wlon0gHPiwpRBdAMUcU9oOPzLnaq9tAtVgfEB938XXX-Y4aBHZ7aNDnM-wbMya-LMSWcH0cC9NOSWisnqvqcEJD6UVKyRccqxAoFv7MqdIU-wC_h7hF5pv7YzDD3tSUKGctw")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}></div>
-            <div style={{ width: 140, height: 48, backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAiy0Jg45fNh_wlngk9dc4gb3dLAEi6JGLlgtCZiOt60_jhpIcCgBsXBUBUHQYIgOq8YCO0NjDMxNrkjFUr1Y4kQx1Xa8X4wJTT8mLV8K7nwYP-WOTzIEyI0nW8fmjVuGnljHi0F6bDgvvnlad-agKD1206iv1E43hl1_8vLtq0MCD8ljGUlcXRTyHk1OtteXpw90kIsolcIEGBbRfVslWEdLoWiHF3w8PZluIannCg1w3CIrmyMSGHyw")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}></div>
-            <div style={{ width: 140, height: 48, backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAxYS4uqG4q5SBbaQSOtjrrZg_zognVqvYCAPh5HY7Rj_du41L8nMiWrOwnI8MH1XYWSJkOdb9s9bulOJF3e0ipk9x7RO5ZB9bfVohGso8sV0t6UkMh9rgOyJ8le1abx_mw7l8_ciYioPsdCJgFHstAknsV8oQJIj5JhIVaJ7RSxeyvEowYMsEQ7xIeXoUFmbu25u4vIqeuEHwR_y7R-dBpEscE9E4fSwXA50Rx0YQ86lLRLZNbMpTohA")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}></div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 56, flexWrap: 'wrap', opacity: 0.6, filter: 'grayscale(1)' }}>
+            <img 
+              src="/provider-aws.png" 
+              alt="AWS" 
+              style={{ height: 36, width: 'auto', objectFit: 'contain' }} 
+            />
+            <img 
+              src="/provider-azure.png" 
+              alt="Microsoft Azure" 
+              style={{ height: 26, width: 'auto', objectFit: 'contain' }} 
+            />
+            <img 
+              src="/provider-gcp.png" 
+              alt="Google Cloud" 
+              style={{ height: 28, width: 'auto', objectFit: 'contain' }} 
+            />
           </div>
           <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', marginTop: 48 }}>© CloudSecure Inc. All rights reserved.</p>
         </div>

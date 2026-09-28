@@ -101,52 +101,89 @@ const ScanHistory = () => {
                     </td>
                   </tr>
                 ) : (
-                  scans.map((scan) => (
-                    <tr key={scan._id} className="hover:bg-[#d8fad1]/30 transition">
-                      {/* Substituted font-mono with font-sans, styled ID neatly */}
-                      <td className="p-5 pl-8 font-sans text-xs text-gray-400 font-semibold select-all tracking-tight uppercase">
-                        {scan._id.slice(0, 8)}...
-                      </td>
-                      <td className="p-5">
-                        <div className="space-y-0.5">
-                          <div className="font-bold text-black text-sm">{scan.triggerType || 'Manual'}</div>
-                          <div className="text-[10px] text-gray-400 font-sans font-medium">
-                            {scan.accountId ? `Scope: AWS (${scan.accountId})` : 'Mock Ingestion'}
+                  scans.map((scan) => {
+                    const findings = scan.findingsFound || scan.findingsCount;
+                    const score = scan.securityScore !== undefined ? scan.securityScore : scan.score;
+                    const provider = scan.provider || (
+                      scan.accountId?.startsWith('project-') || scan.accountId?.includes('gcp') ? 'GCP' :
+                      scan.accountId?.includes('-') && scan.accountId?.length > 20 ? 'AZURE' :
+                      'AWS'
+                    );
+
+                    return (
+                      <tr key={scan._id} className="hover:bg-[#d8fad1]/30 transition">
+                        <td className="p-5 pl-8 font-sans text-xs text-gray-400 font-semibold select-all tracking-tight uppercase">
+                          {scan._id.slice(0, 8)}...
+                        </td>
+                        <td className="p-5">
+                          <div className="space-y-1">
+                            <div className="font-bold text-black text-sm">{scan.triggerType || 'Manual'}</div>
+                            <div className="text-[10px] text-gray-500 font-sans font-medium flex items-center gap-1.5 flex-wrap">
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                                provider === 'AWS'
+                                  ? 'bg-[#fff3e0] text-[#ff9900] border-[#ffe0b2]'
+                                  : provider === 'GCP'
+                                  ? 'bg-[#e8fce0] text-[#2b6d34] border-[#c3f4b0]'
+                                  : provider === 'AZURE'
+                                  ? 'bg-[#e3f2fd] text-[#0078d4] border-[#bbdefb]'
+                                  : 'bg-[#ede9fe] text-[#6b21a8] border-[#ddd6fe]'
+                              }`}>
+                                {provider}
+                              </span>
+                              <span className="truncate max-w-[170px]" title={scan.accountId}>
+                                {scan.accountId || 'All Scopes'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-5">
-                        {scan.status === 'Completed' ? (
-                          <span className="inline-flex items-center space-x-1.5 text-[#2b6d34] font-bold">
-                            <HiOutlineCheckCircle className="h-5 w-5" />
-                            <span>Completed</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center space-x-1.5 text-red-600 font-bold">
-                            <HiOutlineXCircle className="h-5 w-5" />
-                            <span>{scan.status || 'Failed'}</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-5 text-gray-500 font-sans font-bold text-xs">
-                        {scan.findingsCount ? (
-                          <div className="flex gap-1.5">
-                            <span className="px-2 py-0.5 rounded bg-[#ffe5e5] border border-[#ffc0c0] text-red-800 text-[10px] font-sans font-bold">C:{scan.findingsCount.critical || 0}</span>
-                            <span className="px-2 py-0.5 rounded bg-[#fff3e0] border border-[#fdd9a0] text-amber-800 text-[10px] font-sans font-bold">H:{scan.findingsCount.high || 0}</span>
-                            <span className="px-2 py-0.5 rounded bg-[#fff8e0] border border-[#fce9a0] text-yellow-800 text-[10px] font-sans font-bold">M:{scan.findingsCount.medium || 0}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-300">N/A</span>
-                        )}
-                      </td>
-                      <td className="p-5 font-sans font-black text-black text-sm">
-                        {scan.score !== undefined ? `${scan.score}/100` : 'N/A'}
-                      </td>
-                      <td className="p-5 pr-8 text-gray-500 font-bold">
-                        {new Date(scan.completedAt || scan.startedAt).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="p-5">
+                          {scan.status === 'Completed' ? (
+                            <span className="inline-flex items-center space-x-1.5 text-[#2b6d34] font-bold">
+                              <HiOutlineCheckCircle className="h-5 w-5" />
+                              <span>Completed</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1.5 text-red-600 font-bold">
+                              <HiOutlineXCircle className="h-5 w-5" />
+                              <span>{scan.status || 'Failed'}</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-5 text-gray-500 font-sans font-bold text-xs">
+                          {findings ? (
+                            <div className="flex gap-1.5 flex-wrap">
+                              <span className="px-2 py-0.5 rounded bg-[#ffe5e5] border border-[#ffc0c0] text-red-800 text-[10px] font-sans font-bold">
+                                C:{findings.critical ?? 0}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-[#fff3e0] border border-[#fdd9a0] text-amber-800 text-[10px] font-sans font-bold">
+                                H:{findings.high ?? 0}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-[#fff8e0] border border-[#fce9a0] text-yellow-800 text-[10px] font-sans font-bold">
+                                M:{findings.medium ?? 0}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-gray-100 border border-gray-200 text-gray-700 text-[10px] font-sans font-bold">
+                                L:{findings.low ?? 0}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-300">0</span>
+                          )}
+                        </td>
+                        <td className="p-5 font-sans font-black text-sm">
+                          {score !== undefined && score !== null ? (
+                            <span className={score >= 80 ? 'text-[#2b6d34]' : score >= 60 ? 'text-amber-600' : 'text-red-600'}>
+                              {typeof score === 'number' ? score.toFixed(1) : score}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">100%</span>
+                          )}
+                        </td>
+                        <td className="p-5 pr-8 text-gray-500 font-bold">
+                          {new Date(scan.completedAt || scan.startedAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

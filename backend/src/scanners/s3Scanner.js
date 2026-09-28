@@ -3,6 +3,7 @@ const {
   ListBucketsCommand,
   GetPublicAccessBlockCommand,
   GetBucketEncryptionCommand,
+  GetBucketLocationCommand,
 } = require('@aws-sdk/client-s3');
 const Resource = require('../models/Resource');
 
@@ -28,9 +29,22 @@ const scanS3 = async (awsConfig, accountId) => {
       let status = 'active'; // Default
       let encryption = 'disabled';
 
+      // Dynamically detect bucket's native region
+      let bucketRegion = awsConfig.region || 'us-east-1';
+      try {
+        const locRes = await s3Client.send(new GetBucketLocationCommand({ Bucket: bucketName }));
+        bucketRegion = locRes.LocationConstraint || 'us-east-1';
+        if (bucketRegion === 'EU') bucketRegion = 'eu-west-1';
+      } catch (locErr) {
+        // Fallback to configured region
+      }
+
+      // Create regional S3 client to communicate with the bucket's exact endpoint
+      const regionalClient = new S3Client({ ...awsConfig, region: bucketRegion });
+
       // 1. Audit Public Access Block settings
       try {
-        const publicBlockRes = await s3Client.send(
+        const publicBlockRes = await regionalClient.send(
           new GetPublicAccessBlockCommand({ Bucket: bucketName })
         );
         const config = publicBlockRes.PublicAccessBlockConfiguration;
@@ -56,7 +70,7 @@ const scanS3 = async (awsConfig, accountId) => {
 
       // 2. Audit Server Side Encryption configurations
       try {
-        const encryptionRes = await s3Client.send(
+        const encryptionRes = await regionalClient.send(
           new GetBucketEncryptionCommand({ Bucket: bucketName })
         );
         if (encryptionRes.ServerSideEncryptionConfiguration) {
@@ -77,7 +91,7 @@ const scanS3 = async (awsConfig, accountId) => {
         type: 'Bucket',
         cloudProvider: 'AWS',
         accountId,
-        region: awsConfig.region || 'us-east-1',
+        region: bucketRegion,
         arn,
         status,
         tags: {

@@ -1,4 +1,4 @@
-const { EC2Client, DescribeInstancesCommand, DescribeVolumesCommand } = require('@aws-sdk/client-ec2');
+const { EC2Client, DescribeInstancesCommand, DescribeVolumesCommand, GetEbsEncryptionByDefaultCommand } = require('@aws-sdk/client-ec2');
 const Resource = require('../models/Resource');
 
 /**
@@ -65,6 +65,15 @@ const scanEC2 = async (awsConfig, accountId) => {
 
     // 2. Scan EBS Volumes
     try {
+      let accountEbsDefaultEncrypted = false;
+      try {
+        const ebsDef = await ec2Client.send(new GetEbsEncryptionByDefaultCommand({}));
+        accountEbsDefaultEncrypted = !!ebsDef.EbsEncryptionByDefault;
+        console.log(`[EC2 Scanner] Account EBS Encryption by Default in ${region}: ${accountEbsDefaultEncrypted}`);
+      } catch (defErr) {
+        console.warn(`[EC2 Scanner] Could not audit default EBS encryption: ${defErr.message}`);
+      }
+
       const volumesRes = await ec2Client.send(new DescribeVolumesCommand({}));
       const volumes = volumesRes.Volumes || [];
       console.log(`[EC2 Scanner] Discovered ${volumes.length} EBS volume(s).`);
@@ -84,6 +93,7 @@ const scanEC2 = async (awsConfig, accountId) => {
         // Check encryption properties
         const isEncrypted = !!volume.Encrypted;
         tags['Encrypted'] = isEncrypted ? 'enabled' : 'disabled';
+        tags['AccountEbsEncryptionByDefault'] = accountEbsDefaultEncrypted ? 'true' : 'false';
         tags['SizeGB'] = String(volume.Size || 0);
 
         const resourceData = {

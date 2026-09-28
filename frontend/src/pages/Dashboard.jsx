@@ -9,8 +9,10 @@ import {
   HiOutlineDownload,
   HiOutlineSparkles,
   HiX,
-  HiOutlineShieldCheck
+  HiOutlineShieldCheck,
+  HiLightningBolt
 } from 'react-icons/hi';
+import ExecuteFixModal from '../components/ExecuteFixModal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +42,11 @@ const Dashboard = () => {
   const [selectedFinding, setSelectedFinding] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
+  const [showExecuteModal, setShowExecuteModal] = useState(false);
+
+  // Both Admin and Security Analyst have Execute Fix permission
+  const isViewer = user?.role?.toLowerCase() === 'viewer';
+  const canExecuteFix = !isViewer;
 
   // Fetch Dashboard Stats and active findings from API
   const fetchDashboardData = async () => {
@@ -94,20 +101,25 @@ const Dashboard = () => {
   // Trigger PDF Download
   const downloadReport = async () => {
     setDownloading(true);
+    const targetCloudLabel = selectedCloud === 'ALL' ? 'Multi-Cloud' : selectedCloud;
+    const filename = `CloudLockr_${targetCloudLabel}_Security_Report.pdf`;
     toast.promise(
-      axios.get('/api/reports/download', { responseType: 'blob' }),
+      axios.get('/api/reports/download', { 
+        params: { provider: selectedCloud },
+        responseType: 'blob' 
+      }),
       {
-        loading: 'Compiling security audit findings and generating PDF report...',
+        loading: `Compiling ${targetCloudLabel} security audit findings and generating PDF report...`,
         success: (res) => {
           setDownloading(false);
           const url = window.URL.createObjectURL(new Blob([res.data]));
           const link = document.createElement('a');
           link.href = url;
-          link.setAttribute('download', 'CloudLockr_Security_Report.pdf');
+          link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
           link.remove();
-          return 'Report downloaded successfully!';
+          return `${targetCloudLabel} security report downloaded successfully!`;
         },
         error: (err) => {
           setDownloading(false);
@@ -1077,8 +1089,8 @@ const Dashboard = () => {
                     <h4 className="text-sm font-bold text-black mt-2">{selectedFinding.title}</h4>
                     <p className="text-xs text-gray-600 mt-1 leading-relaxed font-medium">{selectedFinding.description}</p>
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 text-[10px] text-gray-500 font-semibold font-mono flex items-center justify-between">
-                      <span>CIS: {selectedFinding.complianceMapping?.cisAWS}</span>
-                      <span>NIST: {selectedFinding.complianceMapping?.nist}</span>
+                      <span>CIS: {selectedFinding.complianceMapping?.cisAWS || 'N/A'}</span>
+                      <span>NIST: {selectedFinding.complianceMapping?.nist || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -1098,15 +1110,47 @@ const Dashboard = () => {
                 </div>
 
                 {/* Drawer Footer */}
-                <div className="border-t border-gray-200 pt-4 text-[10px] text-gray-500 leading-normal">
-                  <span className="font-bold text-amber-600 uppercase mr-1">Remediation Disclaimer:</span>
-                  AI suggestions are for guidance purposes. Always audit generated CLI command blocks inside isolated staging environments before deploying to live production infrastructures.
+                <div className="border-t border-gray-200 pt-4 flex flex-col space-y-3 shrink-0">
+                  {canExecuteFix && (
+                    <div className="flex items-center justify-between p-3 bg-[#f0fbf0] border border-[#c3f4b0] rounded-xl shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center text-[#39ff14]">
+                          <HiLightningBolt size={14} />
+                        </div>
+                        <span className="text-xs font-bold text-black">Ready to remediate?</span>
+                      </div>
+                      <button
+                        onClick={() => setShowExecuteModal(true)}
+                        className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#39ff14] hover:bg-[#32e612] text-black text-xs font-bold rounded-xl transition shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
+                      >
+                        <HiLightningBolt size={13} />
+                        <span>Execute Fix</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="text-[10px] text-gray-500 leading-normal">
+                    <span className="font-bold text-amber-600 uppercase mr-1">Remediation Disclaimer:</span>
+                    AI suggestions are for guidance purposes. Always audit generated CLI command blocks inside isolated staging environments before deploying to live production infrastructures.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Interactive Execute Fix Modal with Smart Parameters */}
+      <ExecuteFixModal
+        finding={selectedFinding}
+        isOpen={showExecuteModal}
+        onClose={() => setShowExecuteModal(false)}
+        onSuccess={() => {
+          fetchDashboardData();
+          setShowExecuteModal(false);
+          setSelectedFinding(null);
+        }}
+      />
     </div>
   );
 };

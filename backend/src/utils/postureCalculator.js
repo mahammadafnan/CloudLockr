@@ -25,7 +25,7 @@ function calculateSecurityPosture({ resources = [], findings = [], provider = 'A
 
   if (Array.isArray(findings)) {
     for (const f of findings) {
-      if (f.status === 'Active') {
+      if (f.status === 'Active' || f.status === 'Pending Verification') {
         const sev = (f.severity || 'Medium').toLowerCase();
         if (counts[sev] !== undefined) counts[sev]++;
         counts.total++;

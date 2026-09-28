@@ -1,30 +1,38 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useCloud } from '../context/CloudContext';
 import { HiOutlineDownload, HiOutlineDocumentText, HiOutlineShieldCheck, HiOutlineClock, HiOutlineMail } from 'react-icons/hi';
 
 const ExecutiveReports = () => {
+  const { selectedCloud, setSelectedCloud } = useCloud();
   const [downloading, setDownloading] = useState(false);
   const [schedule, setSchedule] = useState('weekly'); // 'weekly', 'monthly', 'disabled'
   const [email, setEmail] = useState('security-alerts@company.com');
   const [savingSchedule, setSavingSchedule] = useState(false);
 
+  const targetCloudLabel = selectedCloud === 'ALL' ? 'Multi-Cloud' : selectedCloud;
+
   const downloadReport = async () => {
     setDownloading(true);
+    const filename = `CloudLockr_${targetCloudLabel}_Security_Report.pdf`;
     toast.promise(
-      axios.get('/api/reports/download', { responseType: 'blob' }),
+      axios.get('/api/reports/download', { 
+        params: { provider: selectedCloud },
+        responseType: 'blob' 
+      }),
       {
-        loading: 'Compiling security audit findings and generating PDF report...',
+        loading: `Compiling ${targetCloudLabel} security audit findings and generating PDF report...`,
         success: (res) => {
           setDownloading(false);
           const url = window.URL.createObjectURL(new Blob([res.data]));
           const link = document.createElement('a');
           link.href = url;
-          link.setAttribute('download', 'CloudLockr_Security_Report.pdf');
+          link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
           link.remove();
-          return 'PDF report downloaded successfully!';
+          return `${targetCloudLabel} PDF report downloaded successfully!`;
         },
         error: (err) => {
           setDownloading(false);
@@ -39,17 +47,68 @@ const ExecutiveReports = () => {
     setSavingSchedule(true);
     setTimeout(() => {
       setSavingSchedule(false);
-      toast.success(`Automated email reports scheduled: ${schedule} delivery to ${email}`);
+      toast.success(`Automated ${targetCloudLabel} email reports scheduled: ${schedule} delivery to ${email}`);
     }, 1000);
+  };
+
+  // Dynamic scope and inventory labels based on selected cloud
+  const getInventoryLabel = () => {
+    if (selectedCloud === 'AWS') return 'AWS Resource Inventory (S3, EC2, IAM, Security Groups)';
+    if (selectedCloud === 'GCP') return 'GCP Resource Inventory (Cloud Storage, Compute Engine, IAM, VPC)';
+    if (selectedCloud === 'AZURE') return 'Azure Resource Inventory (Blob Storage, Virtual Machines, Entra ID, NSGs)';
+    return 'Multi-Cloud Resource Inventory (AWS, GCP, Azure Assets)';
+  };
+
+  const getBenchmarkLabel = () => {
+    if (selectedCloud === 'AWS') return 'CIS AWS Foundations Benchmark v1.4.0 & NIST 800-53';
+    if (selectedCloud === 'GCP') return 'CIS Google Cloud Platform Benchmark v2.0.0 & NIST';
+    if (selectedCloud === 'AZURE') return 'CIS Microsoft Azure Benchmark v2.0.0 & NIST';
+    return 'Multi-Cloud CIS Benchmarks (AWS v1.4, GCP v2.0, Azure v2.0)';
+  };
+
+  const getSimulatedScope = () => {
+    if (selectedCloud === 'AWS') return 'Scope: CIS AWS foundations v1.4';
+    if (selectedCloud === 'GCP') return 'Scope: CIS GCP foundations v2.0';
+    if (selectedCloud === 'AZURE') return 'Scope: CIS Azure foundations v2.0';
+    return 'Scope: Multi-Cloud Benchmarks';
   };
 
   return (
     <div className="space-y-8 text-black select-none font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       
       {/* Page Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-black" style={{ letterSpacing: '-0.8px' }}>Executive Reports</h2>
-        <p className="text-sm text-gray-500 mt-1">Download and export printable PDF summaries of your AWS security posture.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-black" style={{ letterSpacing: '-0.8px' }}>Executive Reports</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Download and export printable PDF audit summaries for your {targetCloudLabel === 'Multi-Cloud' ? 'Multi-Cloud infrastructure' : `${targetCloudLabel} cloud deployment`}.
+          </p>
+        </div>
+
+        {/* Cloud Selector Filter Tabs */}
+        <div className="flex items-center space-x-1.5 bg-[#f0f2f0] p-1 rounded-2xl border border-[#e2e6e2]">
+          {[
+            { key: 'ALL', label: 'All Clouds' },
+            { key: 'AWS', label: 'AWS' },
+            { key: 'GCP', label: 'GCP' },
+            { key: 'AZURE', label: 'Azure' },
+          ].map((tab) => {
+            const isActive = selectedCloud === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedCloud(tab.key)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-black text-white shadow-sm'
+                    : 'text-gray-600 hover:text-black hover:bg-white/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -62,8 +121,10 @@ const ExecutiveReports = () => {
               <HiOutlineDocumentText size={24} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-black" style={{ letterSpacing: '-0.3px' }}>Security Assessment Summary</h3>
-              <p className="text-xs text-gray-500 mt-0.5">CIS Foundations compliance posture snapshot</p>
+              <h3 className="text-lg font-bold text-black" style={{ letterSpacing: '-0.3px' }}>
+                {targetCloudLabel} Security Assessment Summary
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">CIS Foundations compliance & active vulnerability posture snapshot</p>
             </div>
           </div>
 
@@ -74,38 +135,44 @@ const ExecutiveReports = () => {
               <ul className="space-y-3.5 text-xs text-gray-600">
                 <li className="flex items-start space-x-2.5">
                   <HiOutlineShieldCheck className="h-5 w-5 text-[#2b6d34] shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">Overall Posture Security Score index</span>
+                  <span className="leading-relaxed">Overall {targetCloudLabel} Security Posture Index & Compliance rating</span>
                 </li>
                 <li className="flex items-start space-x-2.5">
                   <HiOutlineShieldCheck className="h-5 w-5 text-[#2b6d34] shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">Resource Inventory totals (S3, EC2, IAM, SGs)</span>
+                  <span className="leading-relaxed">{getInventoryLabel()}</span>
                 </li>
                 <li className="flex items-start space-x-2.5">
                   <HiOutlineShieldCheck className="h-5 w-5 text-[#2b6d34] shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">Detailed logs of all Active findings with severity ratings</span>
+                  <span className="leading-relaxed">Filtered list of active {targetCloudLabel} findings with severity levels</span>
                 </li>
                 <li className="flex items-start space-x-2.5">
                   <HiOutlineShieldCheck className="h-5 w-5 text-[#2b6d34] shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">Compliance mappings to CIS benchmarks and NIST controls</span>
+                  <span className="leading-relaxed">Actionable remediation instructions for each issue</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <HiOutlineShieldCheck className="h-5 w-5 text-[#2b6d34] shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{getBenchmarkLabel()}</span>
                 </li>
               </ul>
             </div>
 
             {/* Right Column: Simulated PDF Preview Page */}
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-[1.5rem] flex flex-col justify-between h-[180px] shadow-inner select-none font-mono">
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-[1.5rem] flex flex-col justify-between h-[195px] shadow-inner select-none font-mono">
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-[9px] text-gray-400 font-bold uppercase tracking-wider">
                   <span>CloudLockr Report</span>
-                  <span>CONFIDENTIAL</span>
+                  <span className="text-[#2b6d34] font-bold">{targetCloudLabel}</span>
                 </div>
                 <div className="w-1/3 h-1.5 bg-[#39ff14] rounded-full"></div>
-                <div className="pt-2 text-[10px] font-black text-black">AWS SECURITY POSTURE AUDIT</div>
+                <div className="pt-2 text-[10px] font-black text-black">
+                  {targetCloudLabel.toUpperCase()} SECURITY POSTURE AUDIT
+                </div>
                 <div className="w-full h-1 bg-gray-200 rounded-full"></div>
                 <div className="w-2/3 h-1 bg-gray-200 rounded-full"></div>
               </div>
-              <div className="text-[8px] text-gray-400 font-bold">
-                Date: {new Date().toLocaleDateString()}<br />
-                Scope: CIS foundations v1.4
+              <div className="text-[8px] text-gray-400 font-bold space-y-0.5">
+                <div>Date: {new Date().toLocaleDateString()}</div>
+                <div>{getSimulatedScope()}</div>
               </div>
             </div>
           </div>
@@ -118,7 +185,7 @@ const ExecutiveReports = () => {
               style={{ boxShadow: '0 4px 14px rgba(57,255,20,0.2)' }}
             >
               <HiOutlineDownload className="h-4 w-4" />
-              <span>{downloading ? 'Generating Report...' : 'Download PDF Report'}</span>
+              <span>{downloading ? 'Compiling Report...' : `Download ${targetCloudLabel} PDF Report`}</span>
             </button>
           </div>
         </div>
@@ -191,7 +258,7 @@ const ExecutiveReports = () => {
           
           <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider pt-4 border-t border-gray-100 leading-relaxed">
             Note:<br />
-            Schedulers rely on the Express daily scanning cron cycle tasks.
+            Schedulers compile snapshot reports scoped to your active cloud configuration.
           </div>
         </div>
       </div>

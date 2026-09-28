@@ -11,14 +11,13 @@ const Landing = () => {
       {/* Top Navigation Bar */}
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/10">
         <div className="w-full px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center">
-          <div className="flex items-center gap-1.5">
+          <Link to="/" className="flex items-center hover:opacity-90 transition-opacity">
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8190cPQPuby81kmHIOrMUu1tAe4lm5_B2iYIpuC2GwLxTiBmasA5MmyLp3upLh7_qCXkmzWlJiITzj4psHxO_kyoGRYOxpgqPqiMck01UUclOdoi1cK8c1e2m-i_H7m-GVqpE7q4mtDnKZNxyD5mcUM4Fcv5M4n9XFXe6fpwOhzoUOlkjsDeh4nIW-m9MbIWkadX5ED5RokZHQlsAaSqc09bh3iLvdGGs9h1T9OCXO9_EwuBngrAb1bGMBZVHpycen7c" 
-              alt="CloudLockr Logo" 
-              className="h-[56px] w-auto"
+              src="/cloudlockr-logo.png" 
+              alt="CloudLockr" 
+              className="h-6 md:h-[26px] w-auto object-contain" 
             />
-            <span className="font-display-xl-mobile text-headline-md tracking-tighter text-on-surface font-extrabold">CloudLockr</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-6">
             <Link 
               className="font-label-caps text-label-caps text-on-surface hover:text-primary transition-colors duration-300 font-bold" 
@@ -157,13 +156,12 @@ const Landing = () => {
       <footer className="w-full bg-background border-t border-outline-variant/10">
         <div className="w-full px-margin-mobile md:px-margin-desktop py-20 flex flex-col md:flex-row justify-between items-start gap-gutter">
           <div className="space-y-6 max-w-sm">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center">
               <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCicPzYuMei0rmM60GaFDzDd4gDiVmKAbtnK8SfjKbG0mak-K2ub3jwdw3-EZbPgGoC4SNWkoVCw5GKx_EAESzeVHvAVYHTo8dqQNdXdewjs2rkvzDcSo5YRCClWfIf8s4_z91HCYEc-AIIxi1OAfAsAD6wCEhDwKzrHYabjaVF2Ahj7eA7e5J1bum9ecknZ9crcvLM9GEwT-euMYobv_Im7xGO70UdnJ7mMXC5zFpWFxPMx9rBtmTrpjWkvJl1A6a7qSY" 
-                alt="CloudLockr Logo" 
-                className="w-auto h-[56px]"
+                src="/cloudlockr-logo.png" 
+                alt="CloudLockr" 
+                className="h-6 w-auto object-contain" 
               />
-              <span className="font-display-xl-mobile text-headline-md tracking-tighter text-on-surface font-extrabold">CloudLockr</span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed font-normal">
               Next-generation cloud security platform for modern infrastructure teams who value speed without compromising safety.
