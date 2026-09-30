@@ -101,6 +101,7 @@ exports.executeRemediation = async (req, res, next) => {
         ].join(';');
 
         // Pass server credentials into command environment
+        const azureCfg = require('../config/azure');
         const shellEnv = {
           ...process.env,
           PATH: `${extraPaths};${process.env.PATH || ''}`,
@@ -109,6 +110,10 @@ exports.executeRemediation = async (req, res, next) => {
           AWS_DEFAULT_REGION: process.env.AWS_REGION || 'eu-north-1',
           GOOGLE_APPLICATION_CREDENTIALS: require('../config/gcp').keyFilePath || '',
           CLOUDSDK_CORE_PROJECT: require('../config/gcp').projectId || '',
+          AZURE_CLIENT_ID: azureCfg.clientId || '',
+          AZURE_CLIENT_SECRET: azureCfg.clientSecretValue || '',
+          AZURE_TENANT_ID: azureCfg.tenantId || '',
+          AZURE_SUBSCRIPTION_ID: azureCfg.subscriptionId || '',
         };
 
         const { stdout, stderr } = await execPromise(executedCommand, {

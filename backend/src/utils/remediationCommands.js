@@ -51,6 +51,12 @@ function getCanonicalRemediation(finding, parameters = {}) {
     defaultResourceName = arnStr.split('disk/').pop();
   } else if (arnStr.includes('storageAccounts/')) {
     defaultResourceName = arnStr.split('storageAccounts/').pop().split('/')[0];
+  } else if (arnStr.includes('/vaults/')) {
+    defaultResourceName = arnStr.split('/vaults/').pop().split('/')[0];
+  } else if (arnStr.includes('/disks/')) {
+    defaultResourceName = arnStr.split('/disks/').pop().split('/')[0];
+  } else if (arnStr.includes('/virtualMachines/')) {
+    defaultResourceName = arnStr.split('/virtualMachines/').pop().split('/')[0];
   }
 
   // Use user-provided resourceName if supplied and non-empty
@@ -58,6 +64,12 @@ function getCanonicalRemediation(finding, parameters = {}) {
   const title = (finding.title || '').toLowerCase();
   const desc = (finding.description || '').toLowerCase();
   const service = (finding.resourceId?.service || finding.service || '').toUpperCase();
+
+  // Extract Azure Resource Group dynamically
+  let azureResourceGroup = parameters.resourceGroup || 'CloudLockr-RG';
+  if (arnStr.toLowerCase().includes('/resourcegroups/')) {
+    azureResourceGroup = arnStr.split(/\/resourcegroups\//i)[1].split('/')[0];
+  }
 
   // Extract security group ID if applicable
   let sgId = null;
@@ -123,9 +135,9 @@ function getCanonicalRemediation(finding, parameters = {}) {
       actionSummary = `Restricts VPC Firewall Rule '${resourceName}' inbound RDP to authorized CIDR (${cidr})`;
       parameterType = 'network';
 
-    } else if (title.includes('service account') || title.includes('admin privileges') || title.includes('owner')) {
+    } else if (title.includes('service account') || title.includes('admin privileges') || title.includes('owner') || title.includes('editor')) {
       // IAM Service Account Privileges
-      command = `gcloud projects remove-iam-policy-binding ${gcpConfig.projectId} --member=serviceAccount:${resourceName} --role=roles/owner`;
+      command = `gcloud projects remove-iam-policy-binding ${gcpConfig.projectId} --member=serviceAccount:${resourceName} --role=roles/editor --quiet || gcloud projects remove-iam-policy-binding ${gcpConfig.projectId} --member=serviceAccount:${resourceName} --role=roles/owner --quiet`;
       actionSummary = `Revokes primitive Owner/Editor privileges from Service Account '${resourceName}'`;
       parameterType = 'standard';
 
@@ -227,47 +239,94 @@ function getCanonicalRemediation(finding, parameters = {}) {
   // 3. MICROSOFT AZURE
   // =========================================================================
   else if (cloudProvider === 'AZURE') {
-    if (title.includes('blob') || title.includes('anonymous') || title.includes('public access')) {
-      command = `az storage account update --name ${resourceName} --allow-blob-public-access false`;
-      actionSummary = `Disables anonymous blob public access on Azure Storage Account '${resourceName}'`;
-      parameterType = 'standard';
+    const isKeyVault = service.includes('VAULT') || title.includes('key vault') || arnStr.includes('/vaults/');
+    const isDisk = service.includes('DISK') || title.includes('managed disk') || arnStr.includes('/disks/');
+    const isVm = service.includes('VIRTUALMACHINE') || service.includes('VM') || title.includes('virtual machine') || arnStr.includes('/virtualmachines/');
+    const isNsg = service.includes('SECURITYGROUP') || service.includes('SECURITYRULE') || service.includes('NSG') || title.includes('nsg') || title.includes('ssh') || title.includes('rdp') || arnStr.includes('/networksecuritygroups/');
 
-    } else if (title.includes('https') || title.includes('secure transfer')) {
-      command = `az storage account update --name ${resourceName} --https-only true`;
-      actionSummary = `Enforces HTTPS-only Secure Transfer on Azure Storage Account '${resourceName}'`;
-      parameterType = 'standard';
+    if (isKeyVault) {
+      if (title.includes('public network') || title.includes('public access')) {
+        command = `az keyvault update --name ${resourceName} --resource-group ${azureResourceGroup} --public-network-access Disabled`;
+        actionSummary = `Disables public network access on Azure Key Vault '${resourceName}' in '${azureResourceGroup}'`;
+        parameterType = 'standard';
+      } else if (title.includes('purge') || title.includes('soft-delete') || title.includes('soft delete')) {
+        command = `az keyvault update --name ${resourceName} --resource-group ${azureResourceGroup} --enable-purge-protection true`;
+        actionSummary = `Enforces Purge Protection and Soft-Delete on Azure Key Vault '${resourceName}' in '${azureResourceGroup}'`;
+        parameterType = 'standard';
+      } else {
+        command = `az keyvault update --name ${resourceName} --resource-group ${azureResourceGroup} --public-network-access Disabled`;
+        actionSummary = `Applies baseline CIS security configuration on Azure Key Vault '${resourceName}'`;
+        parameterType = 'standard';
+      }
 
-    } else if (title.includes('tls')) {
-      command = `az storage account update --name ${resourceName} --min-tls-version TLS1_2`;
-      actionSummary = `Enforces minimum TLS version 1.2 on Azure Storage Account '${resourceName}'`;
-      parameterType = 'standard';
+    } else if (isNsg) {
+      let nsgName = resourceName;
+      let nsgRuleName = (title.includes('rdp') || title.includes('3389')) ? 'AllowRDP' : (title.includes('ssh') || title.includes('22')) ? 'AllowSSH' : 'AllowAllInbound';
 
-    } else if (title.includes('public network')) {
-      command = `az storage account update --name ${resourceName} --public-network-access Disabled`;
-      actionSummary = `Disables public network access on Azure Storage Account '${resourceName}'`;
-      parameterType = 'standard';
+      if (arnStr.includes('/networkSecurityGroups/')) {
+        const parts = arnStr.split('/networkSecurityGroups/')[1].split('/');
+        nsgName = parts[0];
+        if (parts.length >= 3 && parts[1] === 'securityRules') {
+          nsgRuleName = parts[2];
+        }
+      } else if (resourceName.includes('/')) {
+        const parts = resourceName.split('/');
+        nsgName = parts[0];
+        if (parts[1]) nsgRuleName = parts[1];
+      }
 
-    } else if (title.includes('ssh') || title.includes('port 22')) {
       const cidr = parameters.allowedCidr || '10.0.0.0/16';
-      command = `az network nsg rule update --resource-group CloudLockr-RG --nsg-name ${resourceName} --name AllowSSH --source-address-prefixes ${cidr}`;
-      actionSummary = `Restricts Azure NSG '${resourceName}' SSH rule to authorized CIDR (${cidr})`;
+      command = `az network nsg rule update --resource-group ${azureResourceGroup} --nsg-name ${nsgName} --name ${nsgRuleName} --source-address-prefixes ${cidr}`;
+      actionSummary = `Restricts Azure NSG rule '${nsgRuleName}' on '${nsgName}' to authorized CIDR (${cidr})`;
       parameterType = 'network';
 
-    } else if (title.includes('rdp') || title.includes('port 3389')) {
-      const cidr = parameters.allowedCidr || '10.0.0.0/16';
-      command = `az network nsg rule update --resource-group CloudLockr-RG --nsg-name ${resourceName} --name AllowRDP --source-address-prefixes ${cidr}`;
-      actionSummary = `Restricts Azure NSG '${resourceName}' RDP rule to authorized CIDR (${cidr})`;
-      parameterType = 'network';
-
-    } else if (title.includes('cmek') || title.includes('encryption key')) {
-      command = `az storage account update --name ${resourceName} --encryption-key-source Microsoft.Keyvault --encryption-key-name cloudlockr-key --encryption-key-vault https://cloudlockr-kv.vault.azure.net`;
-      actionSummary = `Configures Customer-Managed Encryption Key on Azure Storage Account '${resourceName}'`;
+    } else if (isDisk) {
+      const des = parameters.diskEncryptionSetId || `/subscriptions/${azureConfig.subscriptionId}/resourceGroups/${azureResourceGroup}/providers/Microsoft.Compute/diskEncryptionSets/cloudlockr-des`;
+      command = `az disk update --resource-group ${azureResourceGroup} --name ${resourceName} --encryption-type EncryptionAtRestWithCustomerKey --disk-encryption-set ${des}`;
+      actionSummary = `Associates Customer-Managed Key (CMEK) via Disk Encryption Set on Azure Disk '${resourceName}'`;
       parameterType = 'encryption';
 
-    } else {
-      command = `az storage account update --name ${resourceName} --allow-blob-public-access false --min-tls-version TLS1_2 --https-only true`;
-      actionSummary = `Enforces baseline CIS Azure security configuration on '${resourceName}'`;
+    } else if (isVm) {
+      command = `az vm update --resource-group ${azureResourceGroup} --name ${resourceName}`;
+      actionSummary = `Applies baseline CIS security baseline to Azure Virtual Machine '${resourceName}'`;
       parameterType = 'standard';
+
+    } else {
+      // Azure Storage Account
+      const storageAccountName = (resourceName.includes('/')) ? resourceName.split('/')[0] : resourceName;
+
+      if (title.includes('blob') || title.includes('anonymous') || title.includes('public access')) {
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --allow-blob-public-access false`;
+        actionSummary = `Disables anonymous blob public access on Azure Storage Account '${storageAccountName}'`;
+        parameterType = 'standard';
+
+      } else if (title.includes('https') || title.includes('secure transfer')) {
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --https-only true`;
+        actionSummary = `Enforces HTTPS-only Secure Transfer on Azure Storage Account '${storageAccountName}'`;
+        parameterType = 'standard';
+
+      } else if (title.includes('tls')) {
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --min-tls-version TLS1_2`;
+        actionSummary = `Enforces minimum TLS version 1.2 on Azure Storage Account '${storageAccountName}'`;
+        parameterType = 'standard';
+
+      } else if (title.includes('public network')) {
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --public-network-access Disabled`;
+        actionSummary = `Disables public network access on Azure Storage Account '${storageAccountName}'`;
+        parameterType = 'standard';
+
+      } else if (title.includes('cmek') || title.includes('encryption key')) {
+        const vaultUri = parameters.keyVaultUri || `https://cloudlockr-kv-test.vault.azure.net`;
+        const keyName = parameters.keyName || 'cloudlockr-key';
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --encryption-key-source Microsoft.Keyvault --encryption-key-name ${keyName} --encryption-key-vault ${vaultUri}`;
+        actionSummary = `Configures Customer-Managed Encryption Key on Azure Storage Account '${storageAccountName}'`;
+        parameterType = 'encryption';
+
+      } else {
+        command = `az storage account update --name ${storageAccountName} --resource-group ${azureResourceGroup} --allow-blob-public-access false --min-tls-version TLS1_2 --https-only true`;
+        actionSummary = `Enforces baseline CIS Azure security configuration on '${storageAccountName}'`;
+        parameterType = 'standard';
+      }
     }
   }
 
@@ -276,6 +335,7 @@ function getCanonicalRemediation(finding, parameters = {}) {
     actionSummary,
     cloudProvider,
     resourceName,
+    azureResourceGroup,
     sgId,
     parameterType,
   };
@@ -285,7 +345,8 @@ function getCanonicalRemediation(finding, parameters = {}) {
  * Apply live SDK mutation to guarantee cloud state change even if CLI has host restrictions.
  */
 async function applyLiveSdkRemediation(finding, parameters = {}) {
-  const { cloudProvider, resourceName, sgId } = getCanonicalRemediation(finding, parameters);
+  const { cloudProvider, resourceName, azureResourceGroup, sgId } = getCanonicalRemediation(finding, parameters);
+  const arnStr = finding.resourceArn || '';
   const title = (finding.title || '').toLowerCase();
   const service = (finding.resourceId?.service || finding.service || '').toUpperCase();
 
@@ -428,10 +489,62 @@ async function applyLiveSdkRemediation(finding, parameters = {}) {
       if (token) {
         const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
         const subId = azureConfig.subscriptionId;
-        const rg = parameters.resourceGroup || 'CloudLockr-RG';
+        const rg = parameters.resourceGroup || azureResourceGroup || 'CloudLockr-RG';
 
-        if (title.includes('public network') || title.includes('tls') || title.includes('https') || title.includes('public access')) {
-          const patchUrl = `https://management.azure.com/subscriptions/${subId}/resourceGroups/${rg}/providers/Microsoft.Storage/storageAccounts/${resourceName}?api-version=2023-01-01`;
+        const isKeyVault = service.includes('VAULT') || title.includes('key vault') || arnStr.includes('/vaults/');
+        const isNsg = service.includes('SECURITYGROUP') || service.includes('SECURITYRULE') || service.includes('NSG') || title.includes('nsg') || title.includes('ssh') || title.includes('rdp') || arnStr.includes('/networksecuritygroups/');
+
+        if (isKeyVault) {
+          const patchUrl = `https://management.azure.com/subscriptions/${subId}/resourceGroups/${rg}/providers/Microsoft.KeyVault/vaults/${resourceName}?api-version=2023-02-01`;
+          const patchProps = {};
+          if (title.includes('public network') || title.includes('public access')) {
+            patchProps.publicNetworkAccess = 'Disabled';
+          }
+          if (title.includes('purge') || title.includes('soft-delete') || title.includes('soft delete')) {
+            patchProps.enablePurgeProtection = true;
+          }
+          if (Object.keys(patchProps).length === 0) {
+            patchProps.publicNetworkAccess = 'Disabled';
+          }
+          await axios.patch(patchUrl, { properties: patchProps }, { headers });
+          results.sdkSuccess = true;
+          results.sdkNotice = `Azure ARM API successfully updated Key Vault '${resourceName}' (${Object.keys(patchProps).join(', ')})`;
+
+        } else if (isNsg) {
+          let nsgName = resourceName;
+          let nsgRuleName = (title.includes('rdp') || title.includes('3389')) ? 'AllowRDP' : (title.includes('ssh') || title.includes('22')) ? 'AllowSSH' : 'AllowAllInbound';
+
+          if (arnStr.includes('/networkSecurityGroups/')) {
+            const parts = arnStr.split('/networkSecurityGroups/')[1].split('/');
+            nsgName = parts[0];
+            if (parts.length >= 3 && parts[1] === 'securityRules') {
+              nsgRuleName = parts[2];
+            }
+          } else if (resourceName.includes('/')) {
+            const parts = resourceName.split('/');
+            nsgName = parts[0];
+            if (parts[1]) nsgRuleName = parts[1];
+          }
+
+          const cidr = parameters.allowedCidr || '10.0.0.0/16';
+          const ruleUrl = `https://management.azure.com/subscriptions/${subId}/resourceGroups/${rg}/providers/Microsoft.Network/networkSecurityGroups/${nsgName}/securityRules/${nsgRuleName}?api-version=2023-05-01`;
+
+          try {
+            const getRes = await axios.get(ruleUrl, { headers });
+            const ruleBody = getRes.data;
+            ruleBody.properties.sourceAddressPrefix = cidr;
+            ruleBody.properties.sourceAddressPrefixes = [];
+            await axios.put(ruleUrl, ruleBody, { headers });
+            results.sdkSuccess = true;
+            results.sdkNotice = `Azure ARM API successfully restricted NSG rule '${nsgRuleName}' on '${nsgName}' to ${cidr}`;
+          } catch (nsgErr) {
+            console.warn('[Remediation Azure NSG]', nsgErr.message);
+          }
+
+        } else {
+          // Azure Storage Account
+          const targetStorageName = (resourceName.includes('/')) ? resourceName.split('/')[0] : resourceName;
+          const patchUrl = `https://management.azure.com/subscriptions/${subId}/resourceGroups/${rg}/providers/Microsoft.Storage/storageAccounts/${targetStorageName}?api-version=2023-01-01`;
           await axios.patch(patchUrl, {
             properties: {
               allowBlobPublicAccess: false,
@@ -441,7 +554,7 @@ async function applyLiveSdkRemediation(finding, parameters = {}) {
             }
           }, { headers });
           results.sdkSuccess = true;
-          results.sdkNotice = `Azure ARM API successfully applied CIS security baseline to storage account '${resourceName}'`;
+          results.sdkNotice = `Azure ARM API successfully applied CIS security baseline to storage account '${targetStorageName}'`;
         }
       }
     } catch (azErr) {
